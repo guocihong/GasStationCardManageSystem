@@ -77,3 +77,11 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+/bin
+/temp
+/Makefile
+/*.zip
+/*.txt
+/SmartUSB通信协议
+/加油站协议V1.0
