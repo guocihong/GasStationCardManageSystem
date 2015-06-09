@@ -1,5 +1,5 @@
 #include "operatecamera.h"
-#define WITH_DEBUG1
+#define WITH_DEBUG
 
 OperateCamera::OperateCamera(QObject *parent) :
     QObject(parent)

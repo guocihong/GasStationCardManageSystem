@@ -36,7 +36,6 @@ public:
     void OpenDevice();
 
     void BuzzerOn();
-    void BuzzerOn1Times();//读身份证成功，蜂鸣器鸣叫1次
     void BuzzerOn2Times();//有效身份证,蜂鸣器鸣叫2次
     void BuzzerOn5Times();//无效身份证，蜂鸣器鸣叫5次
 
@@ -53,12 +52,15 @@ public:
 
 public slots:
     void slotBuzzerOff();
+    void slotDoorState();
 
 public:
     int BuzzerFd;//蜂鸣器
     int LedFd;//指示灯
+    int DoorFd;//防拆开关
 
     QTimer *BuzzerTimer;
+    QTimer *DoorTimer;
 };
 
 #endif // LINKOPERATE_H

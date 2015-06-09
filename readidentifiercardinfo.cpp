@@ -61,6 +61,9 @@ ReadIdentifierCardInfo::ReadIdentifierCardInfo(QWidget *parent) :
 
     link_operate->BuzzerOn();
     link_operate->BuzzerTimer->start();
+
+    CommonSetting::Sleep(6000);
+    link_operate->DoorTimer->start();
 }
 
 ReadIdentifierCardInfo::~ReadIdentifierCardInfo()
@@ -82,13 +85,12 @@ void ReadIdentifierCardInfo::slotPolling()
             //3.选择卡片
             listen_serial->FDX3S_SelectCard();
             QString SelectCardResult = listen_serial->ReadSerial();
-            if(1/*SelectCardResult == "AA AA AA 96 69 00 0C 00 00 90 00 00 00 00 00 00 00 00 9C"*/){
+            if(SelectCardResult == "AA AA AA 96 69 00 0C 00 00 90 00 00 00 00 00 00 00 00 9C"){
                 //4.读取基本信息
                 listen_serial->FDX3S_ReadBaseInfo();
                 CommonSetting::Sleep(1000);
                 QByteArray BaseInfo = listen_serial->ReadSerial().toAscii();
                 if(BaseInfo.length() == 3884){
-//                    link_operate->BuzzerOn1Times();
                     FDX3S_GetPeopleIDCode(BaseInfo);
                 }
             }
@@ -123,15 +125,7 @@ void ReadIdentifierCardInfo::FDX3S_GetPeopleIDCode(QByteArray BaseInfo)
             if((sq.value(0).toInt() <= 0) &&
                     (IdentifierCardNumberStatus == 1))
             {
-                //移动/opt目录下的图片到/mnt目录下
-                QString StrId = QUuid::createUuid().toString();
-                QString DirName = StrId.mid(1,StrId.length() - 2);
-                CommonSetting::CreateFolder("/opt",DirName);
-
-                system(tr("mv /opt/*.txt /opt/%1").arg(DirName).toAscii().data());
-                system(tr("mv /opt/%1 /mnt").arg(DirName).toAscii().data());
-
-                flag = true;
+                flag = true;//允许加油
             }
         }
     }
@@ -142,8 +136,14 @@ void ReadIdentifierCardInfo::FDX3S_GetPeopleIDCode(QByteArray BaseInfo)
         link_operate->InValidUserEnable();
     }
 
+    //移动/opt目录下的图片到/mnt目录下
+    QString StrId = QUuid::createUuid().toString();
+    QString DirName = StrId.mid(1,StrId.length() - 2);
+    CommonSetting::CreateFolder("/opt",DirName);
+    system(tr("mv /opt/*.txt /opt/%1").arg(DirName).toAscii().data());
+    system(tr("mv /opt/%1 /mnt").arg(DirName).toAscii().data());
+
     PollingTimer->stop();
-    system("rm -rf /opt/*.txt");
 
     qint32 SwipCardIntervalTime = CommonSetting::ReadSettings("/bin/config.ini","time/SwipCardIntervalTime").toInt() * 1000;
     QTimer::singleShot(SwipCardIntervalTime,this,SLOT(slotEnableSwipCard()));

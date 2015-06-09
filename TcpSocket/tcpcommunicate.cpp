@@ -1,5 +1,4 @@
 #include "tcpcommunicate.h"
-#define WITH_DEBUG1
 #define WITH_WRITE_FILE1
 
 TcpCommunicate::TcpCommunicate(QObject *parent) :
@@ -20,8 +19,6 @@ TcpCommunicate::TcpCommunicate(QObject *parent) :
 
     ServerIpAddress = CommonSetting::ReadSettings("/bin/config.ini","ServerNetwork/IP");
     ServerListenPort = CommonSetting::ReadSettings("/bin/config.ini","ServerNetwork/PORT");
-    tcpSocket->connectToHost(ServerIpAddress,ServerListenPort.toUInt());
-    CommonSetting::Sleep(1000);
 
     HeartTimer = new QTimer(this);
     quint32 HeartIntervalTime =
@@ -34,7 +31,7 @@ TcpCommunicate::TcpCommunicate(QObject *parent) :
     connect(GetCardIDListTimer,SIGNAL(timeout()),this,SLOT(slotGetIDList()));
 
     CheckNetWorkTimer = new QTimer(this);
-    CheckNetWorkTimer->setInterval(10000);
+    CheckNetWorkTimer->setInterval(1000);
     connect(CheckNetWorkTimer,SIGNAL(timeout()),this,SLOT(slotCheckNetWorkState()));
 
     slotSendHeartData();//开机发送心跳
@@ -53,6 +50,10 @@ void TcpCommunicate::slotSendHeartData()
 {
     SendMsgTypeFlag = TcpCommunicate::DeviceHeart;
     SendDataPackage("","","");
+
+    CommonSetting::Sleep(1000);
+    tcpSocket->disconnectFromHost();
+    tcpSocket->abort();
 }
 
 void TcpCommunicate::slotGetIDList()
@@ -63,6 +64,9 @@ void TcpCommunicate::slotGetIDList()
         qDebug() << "isGetCardIDList";
     }else{
         GetCardIDListTimer->stop();
+        CommonSetting::Sleep(1000);
+        tcpSocket->disconnectFromHost();
+        tcpSocket->abort();
         qDebug() << "stop GetCardIDListTimer";
     }
 }
@@ -80,9 +84,10 @@ void TcpCommunicate::slotCheckNetWorkState()
 void TcpCommunicate::slotParseServerMessage()
 {
     CommonSetting::Sleep(300);
+
     QByteArray data = tcpSocket->readAll();
     QString XmlData = QString(data).mid(20);
-#if defined(WITH_WRITE_FILE1)
+#if defined(WITH_WRITE_FILE)
     CommonSetting::WriteXmlFile("/bin/TcpReceiveMessage.txt",XmlData);
 #endif
     ParseServerMessage(XmlData);//解析服务返回信息
@@ -167,7 +172,7 @@ void TcpCommunicate::ParseServerMessage(QString XmlData)
             for(int i = 0; i < LatestCardIDList.count(); i++){
                 query.exec(tr("INSERT INTO [卡号表] ([卡号], [功能号], [状态], [有效期限]) VALUES (\"%1\",\"%2\",\"%3\",\"%4\");")
                            .arg(LatestCardIDList.at(i)).arg(LatestCardTypeList.at(i)).arg(LatestCardStatusList.at(i)).arg(LatestCardValidTimeList.at(i)));
-                qDebug() << query.lastError().text();
+//                qDebug() << query.lastError().text();
             }
             // 提交事务，这个时候才是真正打开文件执行SQL语句的时候
             QSqlDatabase::database().commit();
@@ -179,7 +184,7 @@ void TcpCommunicate::ParseServerMessage(QString XmlData)
             for(int i = 0; i < CurrentCardIDList.count(); i++){
                 query.exec(tr("UPDATE [卡号表] SET [功能号] = \"%1\", [状态] = \"%2\", [有效期限] = \"%3\" WHERE [卡号] = \"%4\"")
                            .arg(CurrentCardTypeList.at(i)).arg(CurrentCardStatusList.at(i)).arg(CurrentCardValidTimeList.at(i)).arg(CurrentCardIDList.at(i)));
-                qDebug() << query.lastError().text();
+//                qDebug() << query.lastError().text();
             }
             // 提交事务，这个时候才是真正打开文件执行SQL语句的时候
             QSqlDatabase::database().commit();
@@ -189,14 +194,14 @@ void TcpCommunicate::ParseServerMessage(QString XmlData)
 
 void TcpCommunicate::slotCloseConnection()
 {
-    qDebug() << "server close connection!\n";
+    qDebug() << "close connection";
     ConnectStateFlag = TcpCommunicate::DisConnectedState;
     tcpSocket->abort();
 }
 
 void TcpCommunicate::slotEstablishConnection()
 {
-    qDebug() << "connect to server succeed!\n";
+    qDebug() << "connect to server succeed";
     ConnectStateFlag = TcpCommunicate::ConnectedState;
 }
 
@@ -204,13 +209,13 @@ void TcpCommunicate::slotDisplayError(QAbstractSocket::SocketError socketError)
 {
     switch(socketError){
     case QAbstractSocket::ConnectionRefusedError:
-        qDebug() << "QAbstractSocket::ConnectionRefusedError\n";
+        qDebug() << "QAbstractSocket::ConnectionRefusedError";
         break;
     case QAbstractSocket::RemoteHostClosedError:
-        qDebug() << "QAbstractSocket::RemoteHostClosedError\n";
+        qDebug() << "QAbstractSocket::RemoteHostClosedError";
         break;
     case QAbstractSocket::HostNotFoundError:
-        qDebug() << "QAbstractSocket::HostNotFoundError\n";
+        qDebug() << "QAbstractSocket::HostNotFoundError";
         break;
     default:
         qDebug() << "The following error occurred:"
@@ -244,7 +249,7 @@ void TcpCommunicate::SendDataPackage(QString PathPrefix, QString CardID, QString
     RootElement.setAttribute("ID",DeviceID);//设置属性
     RootElement.setAttribute("Mac",MacAddress);
     RootElement.setAttribute("Type","IdentifierCard");
-    RootElement.setAttribute("Ver","1.2.0.36");
+    RootElement.setAttribute("Ver","1.2.0.66");
 
     dom.appendChild(RootElement);
 
@@ -277,31 +282,35 @@ void TcpCommunicate::SendDataPackage(QString PathPrefix, QString CardID, QString
     dom.save(Out,4);
 
     MessageMerge = CommonSetting::AddHeaderByte(MessageMerge);
-#if defined(WITH_WRITE_FILE1)
+#if defined(WITH_WRITE_FILE)
     CommonSetting::WriteCommonFile("/bin/TcpSendMessage.txt",MessageMerge);
 #endif
     SendCommonCode(MessageMerge);
 }
 
-//tcp长连接
+//tcp短连接
 void TcpCommunicate::SendCommonCode(QString MessageMerge)
 {
-    if(ConnectStateFlag == TcpCommunicate::ConnectedState){
+    if(ConnectStateFlag == TcpCommunicate::ConnectedState){      
         tcpSocket->write(MessageMerge.toAscii());
-        DataSendStateFlag = TcpCommunicate::SendSucceed;
-        PareseSendMsgType();
-    }else if(ConnectStateFlag ==
-             TcpCommunicate::DisConnectedState){
+        if(tcpSocket->waitForBytesWritten(1000)){
+            DataSendStateFlag = TcpCommunicate::SendSucceed;
+            PareseSendMsgType();
+        }
+        return;
+    }else if(ConnectStateFlag == TcpCommunicate::DisConnectedState){
         tcpSocket->disconnectFromHost();
         tcpSocket->abort();
-        for(int i = 0; i < 3; i++){
+        for(int i = 0; i < 3; i++){           
             tcpSocket->connectToHost(ServerIpAddress,
                                      ServerListenPort.toUInt());
             CommonSetting::Sleep(1000);
             if(ConnectStateFlag == TcpCommunicate::ConnectedState){
                 tcpSocket->write(MessageMerge.toAscii());
-                DataSendStateFlag = TcpCommunicate::SendSucceed;
-                PareseSendMsgType();
+                if(tcpSocket->waitForBytesWritten(1000)){
+                    DataSendStateFlag = TcpCommunicate::SendSucceed;
+                    PareseSendMsgType();
+                }
                 return;
             }
             tcpSocket->disconnectFromHost();
@@ -315,15 +324,18 @@ void TcpCommunicate::SendCommonCode(QString MessageMerge)
 void TcpCommunicate::PareseSendMsgType()
 {
     if(SendMsgTypeFlag == TcpCommunicate::DeviceHeart){
-        qDebug() << "Tcp:Send DeviceHeart Succeed\n";
+        qDebug() << "Tcp:Send DeviceHeart Succeed";
     }else if(SendMsgTypeFlag == TcpCommunicate::OperationCmd){
-        qDebug() << "Tcp:Picture And CardID Already Succeed Send!\n";
+        qDebug() << "Tcp:Picture And CardID Already Succeed Send";
     }
 }
 
 void TcpCommunicate::slotSendLogInfo(QString info)
 {
     dirWatcher->removePath("/mnt");
+
+    tcpSocket->connectToHost(ServerIpAddress,ServerListenPort.toUInt());
+    tcpSocket->waitForConnected();
 
     QStringList tempCardIDList;
     QStringList tempTriggerTimeList;
@@ -363,6 +375,10 @@ void TcpCommunicate::slotSendLogInfo(QString info)
             }
         }
     }
+
+    CommonSetting::Sleep(1000);
+    tcpSocket->disconnectFromHost();
+    tcpSocket->abort();
 
     dirWatcher->addPath("/mnt");
 }

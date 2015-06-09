@@ -18,7 +18,8 @@ ListenSerial::ListenSerial(QObject *parent) :
 QString ListenSerial::ReadSerial()
 {
     //延时100毫秒保证接收到的是一条完整的数据,而不是脱节的
-    CommonSetting::Sleep(100);
+//    CommonSetting::Sleep(100);//cpu:12%
+    usleep(100 * 1000);//cpu:2.2%
 
     QByteArray Buffer = mySerial->readAll();
     AsciiCode = Buffer;
