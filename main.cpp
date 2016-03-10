@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 
     //读身份证信息、拍照、解析、联动
     ReadIdentifierCardInfo read_serial;
-    read_serial.show();
+//    read_serial.show();
 
     CommonSetting::WriteCommonFileTruncate("/bin/MainProgramState",QString("OK"));
 

@@ -62,7 +62,7 @@ ReadIdentifierCardInfo::ReadIdentifierCardInfo(QWidget *parent) :
     link_operate->BuzzerOn();
     link_operate->BuzzerTimer->start();
 
-    CommonSetting::Sleep(6000);
+    CommonSetting::Sleep(3000);
     link_operate->DoorTimer->start();
 }
 
@@ -85,7 +85,12 @@ void ReadIdentifierCardInfo::slotPolling()
             //3.选择卡片
             listen_serial->FDX3S_SelectCard();
             QString SelectCardResult = listen_serial->ReadSerial();
-            if(SelectCardResult == "AA AA AA 96 69 00 0C 00 00 90 00 00 00 00 00 00 00 00 9C"){
+//            if((SelectCardResult == "AA AA AA 96 69 00 0C 00 00 90 00 00 00 00 00 00 00 00 9C") ||  (SelectCardResult == "AA 00 AA AA 96 69 00 0C 00 00 90 00 00 00 00 00 00 9C"
+//)){
+            if(1){
+                //"AA 00 AA AA 96 69 00 0C 00 00 90 00 00 00 00 00 00 9C"
+                //"AA AA AA 96 69 00 0C 00 00 90 00 00 00 00 00 00 00 00 9C"
+
                 //4.读取基本信息
                 listen_serial->FDX3S_ReadBaseInfo();
                 CommonSetting::Sleep(1000);
@@ -111,7 +116,7 @@ void ReadIdentifierCardInfo::FDX3S_GetPeopleIDCode(QByteArray BaseInfo)
     qDebug() << IdentifierCardNumber;
     operate_camera->StartCamera(IdentifierCardNumber,CommonSetting::GetCurrentDateTime());
 
-    ui->pic_label->setPixmap(QPixmap("/opt/" + IdentifierCardNumber + ".jpg"));
+//    ui->pic_label->setPixmap(QPixmap("/opt/" + IdentifierCardNumber + ".jpg"));
 
     flag = false;
     query.exec(tr("SELECT [状态],[有效期限] FROM [卡号表] WHERE [卡号] = \"%1\"").arg(IdentifierCardNumber));
@@ -136,12 +141,12 @@ void ReadIdentifierCardInfo::FDX3S_GetPeopleIDCode(QByteArray BaseInfo)
         link_operate->InValidUserEnable();
     }
 
-    //移动/opt目录下的图片到/mnt目录下
+    //移动/opt目录下的图片到/sdcard目录下
     QString StrId = QUuid::createUuid().toString();
     QString DirName = StrId.mid(1,StrId.length() - 2);
     CommonSetting::CreateFolder("/opt",DirName);
     system(tr("mv /opt/*.txt /opt/%1").arg(DirName).toAscii().data());
-    system(tr("mv /opt/%1 /mnt").arg(DirName).toAscii().data());
+    system(tr("mv /opt/%1 /sdcard").arg(DirName).toAscii().data());
 
     PollingTimer->stop();
 

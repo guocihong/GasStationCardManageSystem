@@ -124,7 +124,7 @@ public:
     static QString GetCurrentDateTime()
     {
         QDateTime time = QDateTime::currentDateTime();
-        return time.toString("yyyy-MM-dd hh:mm:ss");
+        return time.toString("yyyy-MM-dd_hh-mm-ss");
     }
 
     static QString GetCurrentDateTimeNoSpace()

@@ -40,9 +40,9 @@ TcpCommunicate::TcpCommunicate(QObject *parent) :
     GetCardIDListTimer->start();
     CheckNetWorkTimer->start();
 
-    //创建一个监视器，用于监视目录/mnt的变化
+    //创建一个监视器，用于监视目录/sdcard的变化
     dirWatcher = new QFileSystemWatcher(this);
-    dirWatcher->addPath("/mnt");
+    dirWatcher->addPath("/sdcard");
     connect(dirWatcher,SIGNAL(directoryChanged(QString)), this,SLOT(slotSendLogInfo(QString)));
 }
 
@@ -267,12 +267,11 @@ void TcpCommunicate::SendDataPackage(QString PathPrefix, QString CardID, QString
                 dom.createElement("OperationCmd");
         firstChildElement.setAttribute("Type","7");
         firstChildElement.setAttribute("CardID",CardID);
-        firstChildElement.setAttribute("TriggerTime",TriggerTime);
-        QString fileName = PathPrefix + "Base64_" + CardID + "_" + TriggerTime + ".txt";
-        QString imgBase64 =
-                CommonSetting::ReadFile(fileName);
-        QDomText firstChildElementText =
-                dom.createTextNode(imgBase64);//base64图片数据
+        firstChildElement.setAttribute("TriggerTime",TriggerTime);//2016-02-19 15:07:36
+        //Base64_432503199006177691_2016-02-19_14-34-05.txt
+        QString fileName = PathPrefix + "Base64_" + CardID + "_" + TriggerTime.replace(" ","_").replace(":","-") + ".txt";
+        QString imgBase64 = CommonSetting::ReadFile(fileName);
+        QDomText firstChildElementText = dom.createTextNode(imgBase64);//base64图片数据
         firstChildElement.appendChild(firstChildElementText);
         //将元素添加到根元素后面
         RootElement.appendChild(firstChildElement);
@@ -301,7 +300,10 @@ void TcpCommunicate::SendCommonCode(QString MessageMerge)
     }else if(ConnectStateFlag == TcpCommunicate::DisConnectedState){
         tcpSocket->disconnectFromHost();
         tcpSocket->abort();
-        for(int i = 0; i < 3; i++){           
+        for(int i = 0; i < 3; i++){
+            tcpSocket->disconnectFromHost();
+            tcpSocket->abort();
+
             tcpSocket->connectToHost(ServerIpAddress,
                                      ServerListenPort.toUInt());
             CommonSetting::Sleep(1000);
@@ -332,32 +334,39 @@ void TcpCommunicate::PareseSendMsgType()
 
 void TcpCommunicate::slotSendLogInfo(QString info)
 {
-    dirWatcher->removePath("/mnt");
+    dirWatcher->removePath("/sdcard");
+    CommonSetting::Sleep(1000);
+
+    tcpSocket->disconnectFromHost();
+    tcpSocket->abort();
 
     tcpSocket->connectToHost(ServerIpAddress,ServerListenPort.toUInt());
-    tcpSocket->waitForConnected();
+    tcpSocket->waitForConnected(3000);
 
     QStringList tempCardIDList;
     QStringList tempTriggerTimeList;
     char txFailedCount = 0;//用来统计发送失败次数
     char txSucceedCount = 0;//用来统计发送成功的次数
 
-    QStringList dirlist = CommonSetting::GetDirNames("/mnt");
+    QStringList dirlist = CommonSetting::GetDirNames("/sdcard");
     if(!dirlist.isEmpty()){
         foreach(const QString &dirName,dirlist){
             QStringList filelist =
-                    CommonSetting::GetFileNames("/mnt/" + dirName,"*.txt");
+                    CommonSetting::GetFileNames("/sdcard/" + dirName,"*.txt");
             if(!filelist.isEmpty()){
                 foreach(const QString &fileName,filelist){
+                    //Base64_432503199006177691_2016-02-19_14-34-05.txt
                     tempCardIDList << fileName.split("_").at(1);
-                    QString temp = fileName.split("_").at(2);
-                    tempTriggerTimeList << temp.split(".").at(0);
+                    QString Date = fileName.split("_").at(2);
+                    QString Time = fileName.split("_").at(3).split(".").at(0);
+                    Time = Time.replace(QRegExp("-"),QString(":"));
+                    tempTriggerTimeList << Date + " " + Time;
                 }
                 SendMsgTypeFlag = TcpCommunicate::OperationCmd;
-                SendDataPackage(QString("/mnt/") + dirName + QString("/"),tempCardIDList.join(","),tempTriggerTimeList.join(","));
+                SendDataPackage(QString("/sdcard/") + dirName + QString("/"),tempCardIDList.join(","),tempTriggerTimeList.join(","));
                 //日志信息发送成功:删除本地记录
                 if(DataSendStateFlag == TcpCommunicate::SendSucceed){
-                    system(tr("rm -rf /mnt/%1").arg(dirName).toAscii().data());
+                    system(tr("rm -rf /sdcard/%1").arg(dirName).toAscii().data());
                     txSucceedCount++;
                     if(txSucceedCount == 5){
                         break;
@@ -380,5 +389,5 @@ void TcpCommunicate::slotSendLogInfo(QString info)
     tcpSocket->disconnectFromHost();
     tcpSocket->abort();
 
-    dirWatcher->addPath("/mnt");
+    dirWatcher->addPath("/sdcard");
 }

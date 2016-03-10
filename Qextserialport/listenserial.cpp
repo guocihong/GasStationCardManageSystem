@@ -38,7 +38,7 @@ QString ListenSerial::ReadSerial()
         }
         RetValue = RetValue.simplified().trimmed().toUpper();
     }
-//    qDebug() << QString(RetValue);
+    qDebug() << QString(RetValue);
 
     return QString(RetValue);
 }
