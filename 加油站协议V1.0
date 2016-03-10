@@ -1,0 +1,38 @@
+tcp长连接和短连接都可以，端口65000
+身份识别/确认主机：Type字段用ICCard
+加油站：Type字段用IdentifierCard
+
+命令1、DeviceHeart-->发送
+<?xml version="1.0" encoding="UTF-8"?><Device ID="SGT1TEST0001" Type="IdentifierCard" Mac="00FFAABBCCDD" Ver="1.2.0.45"><DeviceHeart State="1" CardListUpTime="2010-01-01 00:00:00 "/></Device>
+
+返回1：
+ICARD:00000288000000<?xml version="1.0" encoding="UTF-8"?>
+<Server Type="IdentifierService" Ver="1.0.0.0" NowTime="2015-01-22 15:18:52">
+<Caption>70008,,,</Caption>
+<Caption>70001,2,1,2015-12-31</Caption>
+<Caption>70002,2,1,2015-12-31</Caption>
+<Caption>70003,2,1,2015-12-31</Caption>
+</Server>
+
+返回2：
+ICARD:00000146000000<?xml version="1.0" encoding="UTF-8"?>
+<Server Type="IdentifierService" Ver="1.0.0.0" NowTime="2015-01-22 09:23:30">OK</Server>
+
+命令2：OperationCmd发送零拷加油日志信息
+<?xml version="1.0" encoding="UTF-8"?>
+<Device ID="SGT1TEST0001" Type="IdentifierCard" Mac="00FFAABBCCDD" Ver="1.2.0.45">
+<OperationCmd Type="7" CardID="70004" TriggerTime="2015-01-22 09:22:15">/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4p
+LSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09P
+T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAHgAoADASIA
+AhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQA
+WUTemmZynbkNVO9ddh6dKmvC6EkVi3l3nIJre+h1qL
+tc57Vx85NZqSkd60r878mswrzXn1GnI4qj94nWc+pq5C5frWaBzWja9BWdkYzmWSMLVG6FaLcpxW
+bcnnFBtSf7tiQ/dpwNNi+7SA1pB+6e5lrtAuW0m1wM1pLPx1rEVu9W4pSeDWtKep66V2f//Z</OperationCmd>
+</Device>
+
+返回：
+ICARD:00000187000000<?xml version="1.0" encoding="UTF-8"?>
+<Server Type="IdentifierService" Ver="1.0.0.0" NowTime="2015-01-22 15:19:44">
+<CardState>70004,7,1,2015-12-31</CardState>
+</Server>
+
