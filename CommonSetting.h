@@ -1,70 +1,37 @@
 #ifndef COMMONSETTING_H
 #define COMMONSETTING_H
 #include <QObject>
-#include <QBuffer>
-#include <QComboBox>
-#include <QListWidget>
 #include <QDomDocument>
 #include <QSettings>
 #include <QSqlError>
-#include <QMutex>
 #include <QFileSystemWatcher>
-#include <QDesktopServices>
-#include <QWidget>
-#include <QLineEdit>
-#include <QGridLayout>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QStringList>
-#include <QDesktopWidget>
 #include <QList>
 #include <QThread>
 #include <QNetworkInterface>
 #include <QFile>
 #include <QFileInfo>
-#include <QFileIconProvider>
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QTextCodec>
 #include <QMessageBox>
-#include <QAbstractButton>
 #include <QPushButton>
-#include <QTime>
 #include <QDateTime>
-#include <QDate>
-#include <QCoreApplication>
-#include <QFileDialog>
 #include <QProcess>
 #include <QUrl>
 #include <QDir>
-#include <QCursor>
 #include <QTimer>
-#include <QLabel>
-#include <QSound>
 #include <QApplication>
-#include <QStyleFactory>
 #include <QTextStream>
 #include <QDebug>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QMouseEvent>
-#include <stdio.h>
-#include <stdlib.h>
 
 class CommonSetting : public QObject
 {
 public:
     CommonSetting();
     ~CommonSetting();
-
-    //设置编码为GB2312
-    static void SetGB2312Code()
-    {
-        QTextCodec *codec = QTextCodec::codecForName("GB2312");
-        QTextCodec::setCodecForLocale(codec);
-        QTextCodec::setCodecForCStrings(codec);
-        QTextCodec::setCodecForTr(codec);
-    }
 
     //设置编码为UTF8
     static void SetUTF8Code()
@@ -77,7 +44,6 @@ public:
 
     static QString Unicode2UTF8(QString t)
     {
-//        qDebug() << "Convert Before:" << t;
         QTextCodec *codec = QTextCodec::codecForName("UTF-8");
         QStringList s;
         for(int i = 0;i < t.length();i += 4) {
@@ -89,34 +55,22 @@ public:
         }
         QString re = codec->fromUnicode(t1);
         QString utf8 = QString::fromUtf8(re.toAscii().data());
-//        qDebug() << "Convert After:" << utf8;
         return utf8;
     }
 
     static void OpenDataBase()
     {
-        QString dbFile = CommonSetting::GetCurrentPath() + QString("database/DataBase.db");
+        QString dbFile = CommonSetting::GetCurrentPath() + QString("database/GAS.db");
         if(!CommonSetting::FileExists(dbFile)){
             qDebug() << "数据库不存在，程序自动关闭";
             exit(-1);
         }
-        QSqlDatabase DbConn =
-                QSqlDatabase::addDatabase("QSQLITE");
+        QSqlDatabase DbConn = QSqlDatabase::addDatabase("QSQLITE");
         DbConn.setDatabaseName(dbFile);
 
         if(!DbConn.open()){
             qDebug() << "打开数据库失败！程序将自动关闭！";
             exit(-1);
-        }
-    }
-
-
-    //延时处理
-    static void DelayMs(int msc)
-    {
-        QTime t = QTime::currentTime().addMSecs(msc);
-        while(QTime::currentTime() < t){
-            QCoreApplication::processEvents(QEventLoop::AllEvents,100);
         }
     }
 
@@ -321,35 +275,6 @@ public:
         return dirNames;
     }
 
-    //返回文件文件时间
-    static QString GetFileCreateTime(QString fileName)
-    {
-        QFileInfo file(fileName);
-        QDateTime DateTime = file.created();
-        return DateTime.toString("yyyy-MM-dd hh:mm:ss");
-    }
-
-
-    //将图片保存到QByteArray中
-    static QByteArray SaveImageToQByteArrayInJPG(
-            const QString &imageName)
-    {
-        QImage image(imageName);
-        QByteArray tempData;
-        QBuffer tempBuffer(&tempData);
-        image.save(&tempBuffer,"JPG");
-        return tempData;
-    }
-
-    //将JPG格式的图片数据保存到文件中
-    static void SaveJPGDataToPic(const QByteArray &data,
-                                 QString &picName)
-    {
-        QImage image;
-        image.loadFromData(data);
-        image.save(picName);
-    }
-
     //QSetting应用
     static void WriteSettings(const QString &ConfigFile,
                               const QString &key,
@@ -368,35 +293,6 @@ public:
         return settings.value(key).toString();
     }
 
-    static QString ReadSettingsChinese(const QString &ConfigFile,
-                                       const QString &key)
-    {
-        QSettings settings(ConfigFile,QSettings::IniFormat);
-        settings.setIniCodec("UTF-8");
-        return settings.value(key).toString();
-    }
-
-    static QStringList AllChildKeys(const QString &ConfigFile,const QString &beginGroup)
-    {
-        QSettings settings(ConfigFile,
-                           QSettings::IniFormat);
-        settings.beginGroup(beginGroup);
-        return settings.childKeys();
-    }
-
-    static void RemoveSettingsKey(const QString &ConfigFile,
-                                  const QString &key)
-    {
-        QSettings settings(ConfigFile,QSettings::IniFormat);
-        settings.remove(key);
-    }
-
-    static void ClearSettings(const QString &ConfigFile)
-    {
-        QSettings settings(ConfigFile,QSettings::IniFormat);
-        settings.clear();
-    }
-
     //将指定路径下指定格式的文件返回(只返回文件名，不返回绝对路径)
     static QStringList fileFilter(const QString &path,
                                   const QString &filter)
@@ -410,107 +306,10 @@ public:
         return fileList;
     }
 
-
-    //返回当前可执行程序的绝对路径,但不包括本身
-    static QString GetExecutableProgramPath()
-    {
-        return QApplication::applicationDirPath();
-
-    }
-
-    //返回当前可执行程序的绝对路径,包括本身
-    static QString GetExecutableProgramAbsolutePath()
-    {
-        return QApplication::applicationFilePath();
-    }
-
     //获取当前路径
     static QString GetCurrentPath()
     {
         return QString(QCoreApplication::applicationDirPath()+"/");
-    }
-
-    static void QMessageBoxOnlyOk_Information(const QString &info)
-    {
-        QMessageBox msg;
-        msg.setWindowTitle(tr("提示"));
-        msg.setText(info);
-        msg.setIcon(QMessageBox::Information);
-        msg.addButton(tr("确定"),QMessageBox::ActionRole);
-        msg.exec();
-    }
-
-    static void QMessageBoxOnlyOk_Error(const QString &info)
-    {
-        QMessageBox msg;
-        msg.setWindowTitle(tr("提示"));
-        msg.setStyleSheet("font:18pt '宋体'");
-        msg.setText(info);
-        msg.setIcon(QMessageBox::Critical);
-        msg.addButton(tr("确定"),QMessageBox::ActionRole);
-        msg.exec();
-    }
-
-    static void QMessageBoxOkCancel(const QString &info)
-    {
-        QMessageBox msg;
-        msg.setWindowTitle(tr("提示"));
-        msg.setText(info);
-        msg.setIcon(QMessageBox::Information);
-        msg.addButton(tr("确定"),QMessageBox::ActionRole);
-        msg.addButton(tr("取消"),QMessageBox::ActionRole);
-        msg.exec();
-    }
-
-    //显示错误框，仅确定按钮
-    static void ShowMessageBoxError(QString info)
-    {
-        QMessageBox msg;
-        msg.setStyleSheet("font:12pt '宋体'");
-        msg.setWindowTitle(tr("错误"));
-        msg.setText(info);
-        msg.setIcon(QMessageBox::Critical);
-        msg.addButton(tr("确定"),QMessageBox::ActionRole);
-        msg.exec();
-    }
-
-    //窗体居中显示
-    static void WidgetCenterShow(QWidget &frm)
-    {
-        QDesktopWidget desktop;
-        int screenX = desktop.availableGeometry().width();
-        int screenY = desktop.availableGeometry().height();
-        int wndX = frm.width();
-        int wndY = frm.height();
-        QPoint movePoint(screenX/2-wndX/2,screenY/2-wndY/2);
-        frm.move(movePoint);
-    }
-
-    //窗体没有最大化按钮
-    static void FormNoMaxButton(QWidget &frm)
-    {
-        frm.setWindowFlags(Qt::WindowMinimizeButtonHint);
-    }
-
-    //窗体没有最大化和最小化按钮
-    static void FormOnlyCloseButton(QWidget &frm)
-    {
-        frm.setWindowFlags(Qt::WindowMinMaxButtonsHint);
-        frm.setWindowFlags(Qt::WindowCloseButtonHint);
-    }
-
-    //窗体不能改变大小
-    static void FormNotResize(QWidget  &frm)
-    {
-        frm.setFixedSize(frm.width(),frm.height());
-    }
-
-    //获取桌面大小
-    static QSize GetDesktopSize()
-    {
-        QDesktopWidget desktop;
-        return
-                QSize(desktop.availableGeometry().width(),desktop.availableGeometry().height());
     }
 
     //文件是否存在
@@ -535,6 +334,50 @@ public:
                 return temp.join("");
             }
         }
+    }
+
+    static QString GetLocalHostIP()
+    {
+        QList<QNetworkInterface> list =
+                QNetworkInterface::allInterfaces();
+        foreach(const QNetworkInterface &interface,list){
+            if(interface.name() == "eth0"){
+                QList<QNetworkAddressEntry> entrylist = interface.addressEntries();
+                foreach (QNetworkAddressEntry entry, entrylist) {
+                    return entry.ip().toString();
+                }
+            }
+        }
+    }
+
+    static QString GetMask()
+    {
+        QList<QNetworkInterface> list =
+                QNetworkInterface::allInterfaces();
+        foreach(const QNetworkInterface &interface,list){
+            if(interface.name() == "eth0"){
+                QList<QNetworkAddressEntry> entrylist = interface.addressEntries();
+                foreach (QNetworkAddressEntry entry, entrylist) {
+                    return entry.netmask().toString();
+                }
+            }
+        }
+    }
+
+    static QString GetGateway()
+    {
+        system("rm -rf gw.txt");
+        system("route -n | grep 'UG' | awk '{print $2}' > gw.txt");
+
+        QString gw;
+
+        QFile file("gw.txt");
+        if(file.open(QFile::ReadOnly)){
+            gw = QString(file.readAll()).trimmed().simplified();
+            file.close();
+        }
+
+        return gw;
     }
 
     static void SettingSystemDateTime(QString SystemDate)
@@ -578,165 +421,6 @@ public:
                 .arg(TotalLength)
                 .arg("000000")
                 .arg(MessageMerge);
-        return temp;
-    }
-
-    //16进制字符串转字节数组
-    static QByteArray HexStrToByteArray(QString str)
-    {
-        QByteArray senddata;
-        int hexdata,lowhexdata;
-        int hexdatalen = 0;
-        int len = str.length();
-        senddata.resize(len/2);
-        char lstr,hstr;
-        for(int i=0; i<len; )
-        {
-            hstr=str[i].toAscii();
-            if(hstr == ' ')
-            {
-                i++;
-                continue;
-            }
-            i++;
-            if(i >= len)
-                break;
-            lstr = str[i].toAscii();
-            hexdata = ConvertHexChar(hstr);
-            lowhexdata = ConvertHexChar(lstr);
-            if((hexdata == 16) || (lowhexdata == 16))
-                break;
-            else
-                hexdata = hexdata*16+lowhexdata;
-            i++;
-            senddata[hexdatalen] = (char)hexdata;
-            hexdatalen++;
-        }
-        senddata.resize(hexdatalen);
-        return senddata;
-    }
-
-    static char ConvertHexChar(char ch)
-    {
-        if((ch >= '0') && (ch <= '9'))
-            return ch-0x30;
-        else if((ch >= 'A') && (ch <= 'F'))
-            return ch-'A'+10;
-        else if((ch >= 'a') && (ch <= 'f'))
-            return ch-'a'+10;
-        else return (-1);
-    }
-
-    //字节数组转16进制字符串
-    static QString ByteArrayToHexStr(QByteArray data)
-    {
-        QString temp="";
-        QString hex=data.toHex();
-        for (int i=0;i<hex.length();i=i+2)
-        {
-            temp+=hex.mid(i,2)+" ";
-        }
-        return temp.trimmed().toUpper();
-    }
-
-    //16进制字符串转10进制
-    static int StrHexToDecimal(QString strHex)
-    {
-        bool ok;
-        return strHex.toInt(&ok,16);
-    }
-
-    //10进制字符串转10进制
-    static int StrDecimalToDecimal(QString strDecimal)
-    {
-        bool ok;
-        return strDecimal.toInt(&ok,10);
-    }
-
-    //2进制字符串转10进制
-    static int StrBinToDecimal(QString strBin)
-    {
-        bool ok;
-        return strBin.toInt(&ok,2);
-    }
-
-    //16进制字符串转2进制字符串
-    static QString StrHexToStrBin(QString strHex)
-    {
-        uchar decimal=StrHexToDecimal(strHex);
-        QString bin=QString::number(decimal,2);
-
-        uchar len=bin.length();
-        if (len<8)
-        {
-            for (int i=0;i<8-len;i++)
-            {
-                bin="0"+bin;
-            }
-        }
-
-        return bin;
-    }
-
-    //10进制转2进制字符串一个字节
-    static QString DecimalToStrBin1(int decimal)
-    {
-        QString bin=QString::number(decimal,2);
-
-        uchar len=bin.length();
-        if (len<=8)
-        {
-            for (int i=0;i<8-len;i++)
-            {
-                bin="0"+bin;
-            }
-        }
-
-        return bin;
-    }
-
-    //10进制转2进制字符串两个字节
-    static QString DecimalToStrBin2(int decimal)
-    {
-        QString bin=QString::number(decimal,2);
-
-        uchar len=bin.length();
-        if (len<=16)
-        {
-            for (int i=0;i<16-len;i++)
-            {
-                bin="0"+bin;
-            }
-        }
-
-        return bin;
-    }
-
-    //计算校验码
-    static uchar GetCheckCode(uchar data[],uchar len)
-    {
-        uchar temp=0;
-
-        for (uchar i=0;i<len;i++)
-        {
-            temp+=data[i];
-        }
-
-        return temp%256;
-    }
-
-    //将溢出的char转为正确的uchar
-    static uchar GetUChar(char data)
-    {
-        uchar temp;
-        if (data>127)
-        {
-            temp=data+256;
-        }
-        else
-        {
-            temp=data;
-        }
         return temp;
     }
 };

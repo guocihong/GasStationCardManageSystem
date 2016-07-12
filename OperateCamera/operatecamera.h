@@ -35,8 +35,6 @@ public:
     void RequestBuffer();
     void StartCamera(QString CardID, QString TriggerTime);
 
-public slots:
-
 public:
     int Width;
     int Height;

@@ -1,7 +1,7 @@
 #-------------------------------------------------
 #
 # Project created by QtCreator 2013-09-09T15:16:17
-#
+# 零考加油前端主程序
 #-------------------------------------------------
 
 QT       += core network xml sql
@@ -17,7 +17,8 @@ SOURCES += main.cpp\
     Qextserialport/qextserialport.cpp \
     Qextserialport/qextserialport_unix.cpp \
     readidentifiercardinfo.cpp \
-    TcpSocket/tcpcommunicate.cpp
+    Tcp/tcphelper.cpp \
+    globalconfig.cpp
 
 HEADERS  += \
     OperateCamera/operatecamera.h \
@@ -27,7 +28,8 @@ HEADERS  += \
     Qextserialport/qextserialport_global.h \
     Qextserialport/qextserialport_p.h \
     readidentifiercardinfo.h \
-    TcpSocket/tcpcommunicate.h
+    Tcp/tcphelper.h \
+    globalconfig.h
 
 
 DESTDIR=bin

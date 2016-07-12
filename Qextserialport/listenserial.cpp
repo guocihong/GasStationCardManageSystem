@@ -18,13 +18,13 @@ ListenSerial::ListenSerial(QObject *parent) :
 QString ListenSerial::ReadSerial()
 {
     //延时100毫秒保证接收到的是一条完整的数据,而不是脱节的
-//    CommonSetting::Sleep(100);//cpu:12%
-    usleep(100 * 1000);//cpu:2.2%
+    CommonSetting::Sleep(100);
 
     QByteArray Buffer = mySerial->readAll();
+//    qDebug() << Buffer.toHex();
+
     AsciiCode = Buffer;
 
-//    qDebug() << Buffer.toHex();
     QDataStream in(&Buffer,QIODevice::ReadWrite);
     QString strHex,RetValue;
     if(!Buffer.isEmpty()){
@@ -38,7 +38,7 @@ QString ListenSerial::ReadSerial()
         }
         RetValue = RetValue.simplified().trimmed().toUpper();
     }
-    qDebug() << QString(RetValue);
+//    qDebug() << QString(RetValue);
 
     return QString(RetValue);
 }

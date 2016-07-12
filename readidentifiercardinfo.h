@@ -2,6 +2,7 @@
 #define READIDENTIFIERCARDINFO_H
 
 #include <QWidget>
+#include "Tcp/tcphelper.h"
 #include "Qextserialport/listenserial.h"
 #include "LinkOperate/linkoperate.h"
 #include "OperateCamera/operatecamera.h"
@@ -23,20 +24,26 @@ public:
     void FDX3S_GetPeopleIDCode(QByteArray BaseInfo);//得到卡号信息
 
 public slots:
+    void slotUpdateNetWorkStatusInfo(quint8 NetWorkStatus);
+    void slotDoorStatusChanged(QString DoorStatus);
+
     void slotPolling();
     void slotEnableSwipCard();
+
+    void on_btnLedAllRedOn_clicked();
+    void on_btnLedAllGreenOn_clicked();
+    void on_btnLedAllOff_clicked();
 
 private:
     Ui::ReadIdentifierCardInfo *ui;
 
+    TcpHelper *tcphelper;
     ListenSerial *listen_serial;
     LinkOperate *link_operate;
     OperateCamera *operate_camera;
 
     QTimer *PollingTimer;
     QSqlQuery query;
-
-    bool flag;
 };
 
 #endif // READIDENTIFIERCARDINFO_H

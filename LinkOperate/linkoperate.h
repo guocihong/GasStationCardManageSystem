@@ -2,6 +2,7 @@
 #define LINKOPERATE_H
 
 #include "CommonSetting.h"
+#include "Tcp/tcphelper.h"
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -14,19 +15,21 @@
 #include <stdlib.h>
 #include <sys/mman.h>
 
-#define Led0_Green_On	0
-#define Led0_Red_On		1
-#define Led1_Green_On	2
-#define Led1_Red_On		3
-#define Led2_Green_On	4
-#define Led2_Red_On		5
+#define	LED_IOCTL_BASE	 'W'
 
-#define Led0_Green_Off	6
-#define Led0_Red_Off	7
-#define Led1_Green_Off	8
-#define Led1_Red_Off	9
-#define Led2_Green_Off	10
-#define Led2_Red_Off	11
+#define	Led0_Red_On     _IOWR(LED_IOCTL_BASE, 0, int)
+#define	Led0_Green_On     _IOWR(LED_IOCTL_BASE, 1, int)
+#define	Led1_Red_On     _IOWR(LED_IOCTL_BASE, 2, int)
+#define	Led1_Green_On     _IOWR(LED_IOCTL_BASE, 3, int)
+#define	Led2_Red_On     _IOWR(LED_IOCTL_BASE, 4, int)
+#define	Led2_Green_On     _IOWR(LED_IOCTL_BASE, 5, int)
+
+#define	Led0_Red_Off     _IOWR(LED_IOCTL_BASE, 6, int)
+#define	Led0_Green_Off     _IOWR(LED_IOCTL_BASE, 7, int)
+#define	Led1_Red_Off     _IOWR(LED_IOCTL_BASE, 8, int)
+#define	Led1_Green_Off     _IOWR(LED_IOCTL_BASE, 9, int)
+#define	Led2_Red_Off     _IOWR(LED_IOCTL_BASE, 10, int)
+#define	Led2_Green_Off     _IOWR(LED_IOCTL_BASE, 11, int)
 
 class LinkOperate : public QObject
 {
@@ -39,20 +42,25 @@ public:
     void BuzzerOn2Times();//有效身份证,蜂鸣器鸣叫2次
     void BuzzerOn5Times();//无效身份证，蜂鸣器鸣叫5次
 
-    void PowerGreenLedOn();
-    void PowerGreenLedOff();
-    void PowerRedLedOn();
-    void PowerRedLedOff();
+    void AllowAddOil(int type);//注册用户，允许加油
+    void RejectAddOil();//注册用户，不允许加油
+    void InValidUser();//未注册用户
+    void Restore();//ST1,ST2都不亮灯
 
-    void ValidUserEnable();
-    void ValidUserDisable();
+    void ST3_GreenON();//网络正常,ST3亮绿灯(插有网线)
+    void ST3_GreenOFF();//网络异常,ST3不亮灯(插有网线)
+    void ST3_RedON();//网络异常,ST3亮红灯(没有插网线)
 
-    void InValidUserEnable();
-    void InValidUserDisable();
+    void LedAllGreenOn();
+    void LedAllRedOn();
+    void LedAllOff();
 
 public slots:
     void slotBuzzerOff();
-    void slotDoorState();
+    void slotReadDoorState();
+
+signals:
+    void signalDoorStatusChanged(QString DoorStatus);
 
 public:
     int BuzzerFd;//蜂鸣器

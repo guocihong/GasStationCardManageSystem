@@ -1,5 +1,6 @@
 #include "readidentifiercardinfo.h"
 #include "ui_readidentifiercardinfo.h"
+#include "globalconfig.h"
 
 /*
 身份证信息结构:
@@ -50,25 +51,44 @@ ReadIdentifierCardInfo::ReadIdentifierCardInfo(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    tcphelper = new TcpHelper(this);
+    connect(tcphelper,SIGNAL(signalUpdateNetWorkStatusInfo(quint8)),this,SLOT(slotUpdateNetWorkStatusInfo(quint8)));
     listen_serial = new ListenSerial(this);
-    link_operate = new LinkOperate(this);
     operate_camera = new OperateCamera(this);
+    link_operate = new LinkOperate(this);
+    connect(link_operate,SIGNAL(signalDoorStatusChanged(QString)),this,SLOT(slotDoorStatusChanged(QString)));
 
     PollingTimer = new QTimer(this);
     PollingTimer->setInterval(1500);
     connect(PollingTimer,SIGNAL(timeout()),this,SLOT(slotPolling()));
     PollingTimer->start();
 
+
     link_operate->BuzzerOn();
     link_operate->BuzzerTimer->start();
 
-    CommonSetting::Sleep(3000);
     link_operate->DoorTimer->start();
 }
 
 ReadIdentifierCardInfo::~ReadIdentifierCardInfo()
 {
     delete ui;
+}
+
+void ReadIdentifierCardInfo::slotUpdateNetWorkStatusInfo(quint8 NetWorkStatus)
+{
+    if(NetWorkStatus == 0){//没有插网线
+        link_operate->ST3_RedON();
+    }else if(NetWorkStatus == 1){//插有网线,但是与服务器不联通
+        link_operate->ST3_GreenOFF();
+    }else if(NetWorkStatus == 2){//插有网线,并且与服务器联通,网络正常
+        link_operate->ST3_GreenON();
+    }
+}
+
+void ReadIdentifierCardInfo::slotDoorStatusChanged(QString DoorStatus)
+{
+    tcphelper->SendDoorStatusInfo(DoorStatus);
 }
 
 void ReadIdentifierCardInfo::slotPolling()
@@ -80,8 +100,7 @@ void ReadIdentifierCardInfo::slotPolling()
         //2.寻找卡片
         listen_serial->FDX3S_SearchCard();
         QString SearchCardResult = listen_serial->ReadSerial();
-        if(SearchCardResult == "AA AA AA 96 69 00 08 00 00 9F 00 00 00 00 97")
-        {
+        if(SearchCardResult == "AA AA AA 96 69 00 08 00 00 9F 00 00 00 00 97"){
             //3.选择卡片
             listen_serial->FDX3S_SelectCard();
             QString SelectCardResult = listen_serial->ReadSerial();
@@ -105,6 +124,12 @@ void ReadIdentifierCardInfo::slotPolling()
 
 void ReadIdentifierCardInfo::FDX3S_GetPeopleIDCode(QByteArray BaseInfo)
 {
+    //禁止刷卡
+    PollingTimer->stop();
+
+    //禁止测试网络联通
+    tcphelper->HeartTimer->stop();
+
     QString IdentifierCardNumberUnicodeCode;
     QStringList IdentifierCardNumberHexCodeList =
             QString(BaseInfo.mid(ID_OFFSET,ID_LENGTH)).split(" ");
@@ -115,30 +140,42 @@ void ReadIdentifierCardInfo::FDX3S_GetPeopleIDCode(QByteArray BaseInfo)
             CommonSetting::Unicode2UTF8(IdentifierCardNumberUnicodeCode);
     qDebug() << IdentifierCardNumber;
     operate_camera->StartCamera(IdentifierCardNumber,CommonSetting::GetCurrentDateTime());
+    QString fileName = "/opt/" + IdentifierCardNumber + ".jpg";
+    ui->pic_label->setPixmap(QPixmap(fileName));
 
-//    ui->pic_label->setPixmap(QPixmap("/opt/" + IdentifierCardNumber + ".jpg"));
+    bool isRegister = false;//判断身份证号码是否注册
+    bool isAllowAddOil = false;//是否允许加油
+    int IdentifierCardNumberType;
+    int OperateCount;
+    QString ValidTime;
 
-    flag = false;
-    query.exec(tr("SELECT [状态],[有效期限] FROM [卡号表] WHERE [卡号] = \"%1\"").arg(IdentifierCardNumber));
+    query.exec(tr("SELECT [IdentifierCardNumberType],[OperateCount],[ValidTime] FROM [dtm_identifiercardnumber_table] WHERE [IdentifierCardNumber] = \"%1\"").arg(IdentifierCardNumber));
     while(query.next()){
-        int IdentifierCardNumberStatus = query.value(0).toInt();
-        QString IdentifierCardNumberVaildTime =
-                query.value(1).toString();
+        isRegister = true;
+        IdentifierCardNumberType = query.value(0).toInt();
+        OperateCount = query.value(1).toInt();
+        ValidTime = query.value(2).toString();
+
         QSqlQuery sq;
-        sq.exec(tr("SELECT julianday('now')- julianday('%1')").arg(IdentifierCardNumberVaildTime));
+        sq.exec(tr("SELECT julianday('now')- julianday('%1')").arg(ValidTime));
         while(sq.next()){
-            if((sq.value(0).toInt() <= 0) &&
-                    (IdentifierCardNumberStatus == 1))
-            {
-                flag = true;//允许加油
+            //卡号没有过期并且加油次数没有用完
+            if((sq.value(0).toInt() <= 0) && (OperateCount > 0)){
+                isAllowAddOil = true;//允许加油
+            }else{
+                isAllowAddOil = false;//不允许加油
             }
         }
     }
 
-    if(flag){
-        link_operate->ValidUserEnable();
-    }else{
-        link_operate->InValidUserEnable();
+    if(isRegister){//身份证号码注册
+        if(isAllowAddOil){//允许加油
+            link_operate->AllowAddOil(IdentifierCardNumberType);
+        }else{//不允许加油
+            link_operate->RejectAddOil();
+        }
+    }else{//身份证号码未注册
+        link_operate->InValidUser();
     }
 
     //移动/opt目录下的图片到/sdcard目录下
@@ -148,18 +185,32 @@ void ReadIdentifierCardInfo::FDX3S_GetPeopleIDCode(QByteArray BaseInfo)
     system(tr("mv /opt/*.txt /opt/%1").arg(DirName).toAscii().data());
     system(tr("mv /opt/%1 /sdcard").arg(DirName).toAscii().data());
 
-    PollingTimer->stop();
-
-    qint32 SwipCardIntervalTime = CommonSetting::ReadSettings("/bin/config.ini","time/SwipCardIntervalTime").toInt() * 1000;
-    QTimer::singleShot(SwipCardIntervalTime,this,SLOT(slotEnableSwipCard()));
+    QTimer::singleShot(GlobalConfig::SwipCardIntervalTime * 1000,this,SLOT(slotEnableSwipCard()));
 }
 
 void ReadIdentifierCardInfo::slotEnableSwipCard()
 {
-    if(flag){
-        link_operate->ValidUserDisable();
-    }else{
-        link_operate->InValidUserDisable();
-    }
+    //ST1,ST2都不亮灯
+    link_operate->Restore();
+
+    //恢复刷卡
     PollingTimer->start();
+
+    //恢复测试网络联通
+    tcphelper->HeartTimer->start();
+}
+
+void ReadIdentifierCardInfo::on_btnLedAllRedOn_clicked()
+{
+    link_operate->LedAllRedOn();
+}
+
+void ReadIdentifierCardInfo::on_btnLedAllGreenOn_clicked()
+{
+    link_operate->LedAllGreenOn();
+}
+
+void ReadIdentifierCardInfo::on_btnLedAllOff_clicked()
+{
+    link_operate->LedAllOff();
 }

@@ -32,7 +32,7 @@ void OperateCamera::OpenDevice()
     VideoFd = open(VideoDeviceName,O_RDWR | O_NONBLOCK);//打开摄像头
     if (VideoFd < 0){
         Valid = false;
-        qDebug() << QString("Could not open %s\n").arg(VideoDeviceName);
+        qDebug() << QString("Could not open %s").arg(VideoDeviceName);
         return;
     }
     qDebug() << VideoDeviceName << "Open Succeed" << VideoFd;
@@ -42,36 +42,36 @@ void OperateCamera::QueryDeviceCapability()//查询设备属性
 {
     if(::ioctl(VideoFd, VIDIOC_QUERYCAP, &cap) < 0){
         Valid = false;
-        qDebug() << "Could not query capability\n";
+        qDebug() << "Could not query capability";
         return;
     }
 
     if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)){
         Valid = false;
-        qDebug() << "not a video capture device\n";
+        qDebug() << "not a video capture device";
         return;
     }
 
     if (!(cap.capabilities & V4L2_CAP_STREAMING)){
         Valid = false;
-        qDebug() << "not support streaming\n";
+        qDebug() << "not support streaming";
         return;
     }
 
     input.index = 0;
     if (::ioctl(VideoFd, VIDIOC_ENUMINPUT, &input) != 0){
         Valid = false;
-        qDebug() << "No matching index found\n";
+        qDebug() << "No matching index found";
         return;
     }
     if (!input.name){
         Valid = false;
-        qDebug() << "No matching index found\n";
+        qDebug() << "No matching index found";
         return;
     }
     if (::ioctl(VideoFd, VIDIOC_S_INPUT, &input) < 0){
         Valid = false;
-        qDebug() << "VIDIOC_S_INPUT failed\n";
+        qDebug() << "VIDIOC_S_INPUT failed";
         return;
     }
 
@@ -91,7 +91,7 @@ void OperateCamera::SetPictureFormat()
     fmt.fmt.pix.field = V4L2_FIELD_NONE;
     if(::ioctl(VideoFd, VIDIOC_S_FMT, &fmt) < 0){
         Valid = false;
-        qDebug() << "VIDIOC_S_FMT failed\n";
+        qDebug() << "VIDIOC_S_FMT failed";
         return;
     }
 
@@ -114,19 +114,19 @@ void OperateCamera::RequestBuffer()
     req.memory = V4L2_MEMORY_MMAP;
     if(ioctl(VideoFd, VIDIOC_REQBUFS, &req) < 0){
         Valid = false;
-        qDebug() << "request capture buffer failed\n";
+        qDebug() << "request capture buffer failed";
         return;
     }
     if(int(req.count) != CAPTURE_BUFFER_NUMBER){
         Valid = false;
-        qDebug() << "capture buffer number is wrong\n";
+        qDebug() << "capture buffer number is wrong";
         return;
     }
     //将两个已申请到的内核缓冲帧映射到应用程序，用buffers指针记录。
     buffers = (struct buffer *)calloc(req.count,sizeof(struct buffer));
     if(buffers == NULL){
         Valid = false;
-        qDebug() << "calloc request memory failed\n";
+        qDebug() << "calloc request memory failed";
         return;
     }
     // 映射
@@ -140,7 +140,7 @@ void OperateCamera::RequestBuffer()
         // 查询序号为n_buffers的缓冲区，得到其起始物理地址和大小
         if(-1 == ioctl(VideoFd, VIDIOC_QUERYBUF, &buf)){
             Valid = false;
-            qDebug() << "query capture buffer failed\n";
+            qDebug() << "query capture buffer failed";
             return;
         }
         buffers[n_buffers].length = buf.length;
@@ -149,7 +149,7 @@ void OperateCamera::RequestBuffer()
                      ,MAP_SHARED,VideoFd, buf.m.offset);
         if(MAP_FAILED == buffers[n_buffers].start){
             Valid = false;
-            qDebug() << "unable to map capture buffer\n";
+            qDebug() << "unable to map capture buffer";
             return;
         }
     }
@@ -162,7 +162,7 @@ void OperateCamera::RequestBuffer()
         buf.index = i;
         if(ioctl(VideoFd, VIDIOC_QBUF, &buf) < 0){
             Valid = false;
-            qDebug() << "queue capture failed\n";
+            qDebug() << "queue capture failed";
             return;
         }
     }
@@ -171,37 +171,46 @@ void OperateCamera::RequestBuffer()
 
 void OperateCamera::StartCamera(QString CardID,QString TriggerTime)
 {
-    //启动图像采集
     enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+    //停止图像采集
+    if(ioctl(VideoFd, VIDIOC_STREAMOFF, &type) < 0){
+        qDebug() << "cannot stop stream";
+        return;
+    }
+
+    //启动图像采集
     if(ioctl(VideoFd, VIDIOC_STREAMON, &type) < 0){
         Valid = false;
-        qDebug() << "Could not start stream\n";
+        qDebug() << "Could not start stream";
         return;
     }
 
     if(Valid){
-        qDebug() << "StartStream OK!\n";
+        qDebug() << "StartStream OK";
     }
     //等待摄像头采集到一桢数据
     for(;;){
         fd_set fds;
-        struct timeval tv;
         FD_ZERO(&fds);//将指定的文件描述符集清空
         FD_SET(VideoFd, &fds);//在文件描述符集合中增加一个新的文件描述符
-        tv.tv_sec = 2;
-        tv.tv_usec = 0;
+        struct timeval tv;
+        tv.tv_sec = 0;
+        tv.tv_usec = 500000;
         int r = select(VideoFd + 1, &fds, NULL, NULL, &tv);//判断是否可读（即摄像头是否准备好），tv是定时
         if(-1 == r) {
             if(EINTR == errno)
                 continue;
-            qDebug() << "select error\n";
+            qDebug() << "select error";
             return;
         }else if(0 == r) {
-            qDebug() << "select timeout\n";
+            qDebug() << "select timeout";
             return;
         }else{//采集到一张图片
             break;
         }
+
+        qDebug() << "xxxxxxxxxxxxxxxxxxxxxx";
     }
 
     //从缓冲区取出一个缓冲帧
@@ -210,23 +219,24 @@ void OperateCamera::StartCamera(QString CardID,QString TriggerTime)
     buf.memory = V4L2_MEMORY_MMAP;
     buf.index = 0;
     if(ioctl(VideoFd, VIDIOC_DQBUF, &buf) < 0){
-        qDebug() << "cannot fetch picture(VIDIOC_DQBUF failed)\n";
+        qDebug() << "cannot fetch picture(VIDIOC_DQBUF failed)";
         return;
     }
 
     //停止图像采集
     if(ioctl(VideoFd, VIDIOC_STREAMOFF, &type) < 0){
-        qDebug() << "cannot stop stream\n";
+        qDebug() << "cannot stop stream";
         return;
     }
 
+    system("rm -rf /opt/*.jpg");
     QString Base64 = QString("/opt/Base64_") + CardID + QString("_") + TriggerTime + QString(".txt");
     QImage image_rgb565((const uchar *)buffers[buf.index].start,Width,Height,QImage::Format_RGB16);
 
     QByteArray tempData;
     QBuffer tempBuffer(&tempData);
     image_rgb565.save(&tempBuffer,"JPG");//按照JPG解码保存数据
-//    image_rgb565.save("/opt/" + CardID + ".jpg","JPG");
+    image_rgb565.save("/opt/" + CardID + ".jpg","JPG");
     QByteArray Base64Data = tempData.toBase64();
 
     QFile file(Base64);
@@ -236,7 +246,7 @@ void OperateCamera::StartCamera(QString CardID,QString TriggerTime)
     }
     //将取出的缓冲帧放回缓冲区
     if(ioctl(VideoFd, VIDIOC_QBUF, &buf) < 0){
-        qDebug() << "cannot VIDIOC_QBUF failed\n";
+        qDebug() << "cannot VIDIOC_QBUF failed";
         return;
     }
 }

@@ -1,0 +1,94 @@
+tcp长连接和短连接都可以，端口65001
+加油站：Type字段用IdentifierCard
+
+1、测试网络联通性
+发送Heart命令，如果有返回表示网络是联通的，否则网络就是不通的，默认每隔3s发送一次，在线ST3闪绿灯,离线ST3闪红灯，没有插网线，不亮灯
+
+发送：
+<?xml version="1.0" encoding="UTF-8"?><Device ID="SGT1TEST0001" Type="IdentifierCard" Mac="00FFAABBCCDD" Ver="1.2.0.83"><Heart/></Device>
+
+返回1：
+ICARD:00000157000000<?xml version="1.0" encoding="UTF-8"?>
+<Server Type="IdentifierService" Ver="1.0.0.9" NowTime="2016-07-08 12:41:54">
+<Msg>OK</Msg>
+</Server>
+
+返回2：
+ICARD:00000193000000<?xml version="1.0" encoding="UTF-8"?>
+<Server Type="IdentifierService" Ver="1.0.0.9" NowTime="2016-07-08 12:42:06">
+<Msg id="2001">SGT1TEST0006 尚末绑定！</Msg>
+</Server>
+
+备注：
+1、如果返回的消息中带有id属性，ST3要一直显示红灯，蜂鸣器两声，并且要打印出来，直到返回的消息没有id这个属性，才正常显示绿灯，网络不通，灯不亮
+
+2、发送心跳获取身份证列表
+发送：
+<?xml version="1.0" encoding="UTF-8"?><Device ID="SGT1TEST0001" Type="IdentifierCard" Mac="00FFAABBCCDD" Ver="1.2.0.83"><DeviceHeart State="0" CardListUpTime="2010-01-01 00:00:00 "/></Device>
+
+返回1：
+ICARD:00000360000000<?xml version="1.0" encoding="UTF-8"?>
+<Server Type="IdentifierService" Ver="1.0.0.9" NowTime="2016-07-08 12:40:28">
+<Caption>310108198904231015,1,446,2017-07-31</Caption>
+<Caption>310109999999999999,2,496,2100-07-31</Caption>
+<Caption>341125199005272375,2,496,2100-07-31</Caption>
+<Caption>432503199006177691,2,496,2100-07-31</Caption>
+</Server>
+
+返回2：
+ICARD:00000193000000<?xml version="1.0" encoding="UTF-8"?>
+<Server Type="IdentifierService" Ver="1.0.0.9" NowTime="2016-07-08 12:41:24">
+<Msg id="2001">SGT1TEST0006 尚末绑定！</Msg>
+</Server>
+
+备注：
+1、返回的消息如果带有id不做处理，仅仅只是打印出来
+2、432503199006177691,2,497,2100-07-31
+身份证号码、类型(1为个人加油，2为单位加油)、允许加油次数(可能为负数)、有效期
+3、离线情况下，数据库中的身份证列表可能存在过期的卡号；在线状态下，只会返回不过期的卡号
+4、亮灯规则如下：
+4.1、身份证号码没有注册：ST1亮红灯-不允许加油，蜂鸣五声（蜂鸣声音间隔时间短点）,ST2不亮灯，在线ST3闪绿灯,离线ST3闪红灯，没有插网线，不亮灯
+
+4.2、身份证号码注册：
+4.2.1、卡号过期了/次数用完了：ST1、ST2都亮红灯-不允许加油，蜂鸣五声（蜂鸣声音间隔时间短点），在线ST3闪绿灯,离线ST3闪红灯，没有插网线，不亮灯
+
+4.2.2、卡号正常：ST1亮绿灯-允许加油，蜂鸣两声（蜂鸣声间隔时间短点），ST2亮绿灯-单位加油，不亮灯-个人加油，在线ST3闪绿灯,离线ST3闪红灯，没有插网线，不亮灯
+
+3、发送图片和身份证号码
+发送：
+<?xml version="1.0" encoding="UTF-8"?>
+<Device ID="SGT1TEST0001" Type="IdentifierCard" Mac="00FFAABBCCDD" Ver="1.2.0.83">
+<OperationCmd Type="1" CardID="310108198904231015" TriggerTime="2016-07-08 12:42:31">Base64的图片数据</OperationCmd>
+</Device>
+
+返回1：
+ICARD:00000202000000<?xml version="1.0" encoding="UTF-8"?>
+<Server Type="IdentifierService" Ver="1.0.0.9" NowTime="2016-07-08 12:44:18">
+<CardState>310108198904231015,1,445,2017-07-31</CardState>
+</Server>
+
+返回2：
+ICARD:00000193000000<?xml version="1.0" encoding="UTF-8"?>
+<Server Type="IdentifierService" Ver="1.0.0.9" NowTime="2016-07-08 12:42:41">
+<Msg id="2001">SGT1TEST0001 尚末绑定！</Msg>
+</Server>
+
+返回3：
+ICARD:00000181000000<?xml version="1.0" encoding="UTF-8"?>
+<Server Type="IdentifierService" Ver="1.0.0.9" NowTime="2016-07-08 13:49:20">
+<Msg id="2002">图像错误！</Msg>
+</Server>
+
+备注：
+1、发送 OperationCmd 命令，服务器没有返回 或 返回 msg 带 id 就认为没有发送成功（id为2001除外），保存到本地，需要下次重新发送；如果发送成功，将图片删除，本地不保存图片
+
+4、防拆
+4.1、打开(报警)
+<?xml version="1.0" encoding="UTF-8"?><Device ID="SGT1TEST0001" Type="IdentifierCard" Mac="00FFAABBCCDD" Ver="1.2.0.83"><DeviceHeart State="1" CardListUpTime=""/></Device>
+
+4.2、闭合(正常)
+<?xml version="1.0" encoding="UTF-8"?><Device ID="SGT1TEST0001" Type="IdentifierCard" Mac="00FFAABBCCDD" Ver="1.2.0.83"><DeviceHeart State="0" CardListUpTime=""/></Device>
+
+备注：
+1、防拆打开/闭合需要立即发送消息，并且只需要发送一次
+2、CardListUpTime设置为空，这样就不会返回身份证列表
