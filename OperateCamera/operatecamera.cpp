@@ -32,10 +32,10 @@ void OperateCamera::OpenDevice()
     VideoFd = open(VideoDeviceName,O_RDWR | O_NONBLOCK);//打开摄像头
     if (VideoFd < 0){
         Valid = false;
-        qDebug() << QString("Could not open %s").arg(VideoDeviceName);
-        return;
+        qDebug() << QString("open %1 failed").arg(VideoDeviceName);
+    } else {
+        qDebug() << QString("open %1 succeed").arg(VideoDeviceName);
     }
-    qDebug() << VideoDeviceName << "Open Succeed" << VideoFd;
 }
 
 void OperateCamera::QueryDeviceCapability()//查询设备属性
@@ -167,17 +167,9 @@ void OperateCamera::RequestBuffer()
         }
     }
     qDebug() << "request capture buffer succeed";
-}
 
-void OperateCamera::StartCamera(QString CardID,QString TriggerTime)
-{
+    ////////////////////////////////////
     enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-
-    //停止图像采集
-    if(ioctl(VideoFd, VIDIOC_STREAMOFF, &type) < 0){
-        qDebug() << "cannot stop stream";
-        return;
-    }
 
     //启动图像采集
     if(ioctl(VideoFd, VIDIOC_STREAMON, &type) < 0){
@@ -189,6 +181,33 @@ void OperateCamera::StartCamera(QString CardID,QString TriggerTime)
     if(Valid){
         qDebug() << "StartStream OK";
     }
+    ////////////////////////////////////
+
+}
+
+void OperateCamera::StartCamera(QString CardID,QString TriggerTime)
+{
+    ////////////////////////////////////
+    //停止图像采集
+//    enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+//    if(ioctl(VideoFd, VIDIOC_STREAMOFF, &type) < 0){
+//        qDebug() << "cannot stop stream";
+//        return;
+//    }
+
+    //启动图像采集
+//    if(ioctl(VideoFd, VIDIOC_STREAMON, &type) < 0){
+//        Valid = false;
+//        qDebug() << "Could not start stream";
+//        return;
+//    }
+
+//    if(Valid){
+//        qDebug() << "StartStream OK";
+//    }
+    ////////////////////////////////////
+
     //等待摄像头采集到一桢数据
     for(;;){
         fd_set fds;
@@ -223,11 +242,13 @@ void OperateCamera::StartCamera(QString CardID,QString TriggerTime)
         return;
     }
 
+    ////////////////////////////////////
     //停止图像采集
-    if(ioctl(VideoFd, VIDIOC_STREAMOFF, &type) < 0){
-        qDebug() << "cannot stop stream";
-        return;
-    }
+//    if(ioctl(VideoFd, VIDIOC_STREAMOFF, &type) < 0){
+//        qDebug() << "cannot stop stream";
+//        return;
+//    }
+    ////////////////////////////////////
 
     system("rm -rf /opt/*.jpg");
     QString Base64 = QString("/opt/Base64_") + CardID + QString("_") + TriggerTime + QString(".txt");

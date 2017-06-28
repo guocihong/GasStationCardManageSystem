@@ -9,10 +9,9 @@ class TcpHelper : public QObject
 public:
     explicit TcpHelper(QObject *parent = 0);
     void SendDoorStatusInfo(QString DoorStatus);//发送门磁状态信息
-    void SendDataPackage(QString PathPrefix, QString CardID, QString TriggerTime);
+    void SendDataPackage(QString PathPrefix, QString CardID, QString TriggerTime, QString CardType);
     void SendCommonCode(QString MessageMerge);
     void PareseSendMsgType();
-    void ParseServerMessage(QString XmlData);
 
 public slots:
     //与深广服务器通信

@@ -1,49 +1,46 @@
-#ifndef READIDENTIFIERCARDINFO_H
-#define READIDENTIFIERCARDINFO_H
+#ifndef MainForm_H
+#define MainForm_H
 
 #include <QWidget>
-#include "Tcp/tcphelper.h"
-#include "Qextserialport/listenserial.h"
-#include "LinkOperate/linkoperate.h"
-#include "OperateCamera/operatecamera.h"
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QUuid>
+#include "readidentifiercardinfoutil.h"
+#include "Tcp/tcphelper.h"
+#include "LinkOperate/linkoperate.h"
+#include "OperateCamera/operatecamera.h"
 
 namespace Ui {
-class ReadIdentifierCardInfo;
+class MainForm;
 }
 
-class ReadIdentifierCardInfo : public QWidget
+class MainForm : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit ReadIdentifierCardInfo(QWidget *parent = 0);
-    ~ReadIdentifierCardInfo();
-    void FDX3S_GetPeopleIDCode(QByteArray BaseInfo);//得到卡号信息
+    explicit MainForm(QWidget *parent = 0);
+    ~MainForm();
+
+    void Parse();
 
 public slots:
+    void slotCardInfo(QStringList &info);
+
     void slotUpdateNetWorkStatusInfo(quint8 NetWorkStatus);
     void slotDoorStatusChanged(QString DoorStatus);
 
-    void slotPolling();
     void slotEnableSwipCard();
 
-    void on_btnLedAllRedOn_clicked();
-    void on_btnLedAllGreenOn_clicked();
-    void on_btnLedAllOff_clicked();
-
 private:
-    Ui::ReadIdentifierCardInfo *ui;
+    Ui::MainForm *ui;
 
+    ReadIdentifierCardInfoUtil *readid;
     TcpHelper *tcphelper;
-    ListenSerial *listen_serial;
     LinkOperate *link_operate;
     OperateCamera *operate_camera;
 
-    QTimer *PollingTimer;
     QSqlQuery query;
 };
 
-#endif // READIDENTIFIERCARDINFO_H
+#endif // MainForm_H

@@ -1,4 +1,4 @@
-#include "readidentifiercardinfo.h"
+#include "mainform.h"
 #include "globalconfig.h"
 
 int main(int argc, char *argv[])
@@ -12,14 +12,14 @@ int main(int argc, char *argv[])
     CommonSetting::SetUTF8Code();
     CommonSetting::OpenDataBase();
 
-    system("/bin/UdpMulticastClient -qws &");
-    CommonSetting::Sleep(1000);
+//    system("/bin/UdpMulticastClient -qws &");
+//    CommonSetting::Sleep(1000);
     system("/bin/CheckMainProgramState -qws &");
     CommonSetting::Sleep(1000);
 
     //读身份证信息、拍照、解析、联动
-    ReadIdentifierCardInfo read_serial;
-    read_serial.show();
+    MainForm form;
+    form.showFullScreen();
 
     CommonSetting::WriteCommonFileTruncate("/bin/MainProgramState",QString("OK"));
 

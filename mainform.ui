@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ReadIdentifierCardInfo</class>
- <widget class="QWidget" name="ReadIdentifierCardInfo">
+ <class>MainForm</class>
+ <widget class="QWidget" name="MainForm">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>650</width>
-    <height>528</height>
+    <width>1135</width>
+    <height>892</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,58 +17,524 @@
    <bool>false</bool>
   </property>
   <property name="styleSheet">
-   <string notr="true"/>
+   <string notr="true">background-color: rgb(255, 255, 255);</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
-   <property name="leftMargin">
-    <number>5</number>
-   </property>
-   <property name="topMargin">
-    <number>5</number>
-   </property>
-   <property name="rightMargin">
-    <number>5</number>
-   </property>
-   <property name="bottomMargin">
-    <number>5</number>
-   </property>
+  <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <widget class="QLabel" name="pic_label">
-     <property name="minimumSize">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
       <size>
-       <width>640</width>
-       <height>480</height>
+       <width>20</width>
+       <height>6</height>
       </size>
      </property>
-     <property name="text">
-      <string/>
-     </property>
-    </widget>
+    </spacer>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
-      <widget class="QPushButton" name="btnLedAllGreenOn">
-       <property name="text">
-        <string>全绿灯亮</string>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
        </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QFrame" name="frame_2">
+       <property name="styleSheet">
+        <string notr="true">border:2px solid rgb(0, 129, 255);
+border-radius:30px;</string>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <property name="leftMargin">
+         <number>30</number>
+        </property>
+        <property name="topMargin">
+         <number>30</number>
+        </property>
+        <property name="rightMargin">
+         <number>30</number>
+        </property>
+        <property name="bottomMargin">
+         <number>30</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>200</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>200</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">border-image: url();
+background-color: rgb(0, 129, 255);
+border:0px;
+font: 72pt &quot;文泉驿微米黑&quot;;
+color: rgb(255, 255, 255);
+border-radius:0px;</string>
+          </property>
+          <property name="text">
+           <string>信息采集</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QLabel" name="labSnapImage">
+            <property name="minimumSize">
+             <size>
+              <width>640</width>
+              <height>480</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>640</width>
+              <height>480</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">image: url(:/images/nopic.png);
+border:2px solid rgb(0, 129, 255);
+border-radius:0px;</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QFrame" name="frame">
+            <property name="minimumSize">
+             <size>
+              <width>391</width>
+              <height>480</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>391</width>
+              <height>480</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">border:2px solid rgb(0, 129, 255);
+border-image: url(:/images/template.jpg);
+border-radius:0px;</string>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::StyledPanel</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Raised</enum>
+            </property>
+            <widget class="QLabel" name="labName">
+             <property name="geometry">
+              <rect>
+               <x>80</x>
+               <y>20</y>
+               <width>141</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">border-image: url();
+border:0px;
+font: 14pt &quot;文泉驿微米黑&quot;;
+color: rgb(0, 0, 0);
+background-color: rgba(255, 255, 255, 0);</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+            <widget class="QLabel" name="labSex">
+             <property name="geometry">
+              <rect>
+               <x>80</x>
+               <y>50</y>
+               <width>31</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">border-image: url();
+border:0px;
+font: 14pt &quot;文泉驿微米黑&quot;;
+color: rgb(0, 0, 0);
+background-color: rgba(255, 255, 255, 0);</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+            <widget class="QLabel" name="labNation">
+             <property name="geometry">
+              <rect>
+               <x>160</x>
+               <y>50</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">border-image: url();
+border:0px;
+font: 14pt &quot;文泉驿微米黑&quot;;
+color: rgb(0, 0, 0);
+background-color: rgba(255, 255, 255, 0);</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+            <widget class="QLabel" name="labYear">
+             <property name="geometry">
+              <rect>
+               <x>80</x>
+               <y>80</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">border-image: url();
+border:0px;
+font: 12pt &quot;文泉驿微米黑&quot;;
+color: rgb(0, 0, 0);
+background-color: rgba(255, 255, 255, 0);</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+            <widget class="QLabel" name="labMonth">
+             <property name="geometry">
+              <rect>
+               <x>140</x>
+               <y>80</y>
+               <width>21</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">border-image: url();
+border:0px;
+font: 12pt &quot;文泉驿微米黑&quot;;
+color: rgb(0, 0, 0);
+background-color: rgba(255, 255, 255, 0);</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+            <widget class="QLabel" name="labDay">
+             <property name="geometry">
+              <rect>
+               <x>170</x>
+               <y>80</y>
+               <width>21</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">border-image: url();
+border:0px;
+font: 12pt &quot;文泉驿微米黑&quot;;
+color: rgb(0, 0, 0);
+background-color: rgba(255, 255, 255, 0);</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+            <widget class="QLabel" name="labAddress">
+             <property name="geometry">
+              <rect>
+               <x>80</x>
+               <y>110</y>
+               <width>181</width>
+               <height>51</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">border-image: url();
+border:0px;
+font: 12pt &quot;文泉驿微米黑&quot;;
+color: rgb(0, 0, 0);
+background-color: rgba(255, 255, 255, 0);</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+            <widget class="QLabel" name="labIDCode">
+             <property name="geometry">
+              <rect>
+               <x>140</x>
+               <y>189</y>
+               <width>231</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">border-image: url();
+border:0px;
+font: 12pt &quot;文泉驿微米黑&quot;;
+color: rgb(0, 0, 0);
+background-color: rgba(255, 255, 255, 0);</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="wordWrap">
+              <bool>false</bool>
+             </property>
+            </widget>
+            <widget class="QLabel" name="labCertificateImage">
+             <property name="geometry">
+              <rect>
+               <x>270</x>
+               <y>50</y>
+               <width>102</width>
+               <height>126</height>
+              </rect>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>102</width>
+               <height>126</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>102</width>
+               <height>126</height>
+              </size>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">border-image: url();
+border:0px;
+font: 12pt &quot;文泉驿微米黑&quot;;
+background-color: rgba(255, 255, 255, 0);
+border-radius:0px;</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+            <widget class="QLabel" name="labDepartment">
+             <property name="geometry">
+              <rect>
+               <x>160</x>
+               <y>400</y>
+               <width>221</width>
+               <height>31</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">border-image: url();
+border:0px;
+font: 12pt &quot;文泉驿微米黑&quot;;
+color: rgb(0, 0, 0);
+background-color: rgba(255, 255, 255, 0);</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="wordWrap">
+              <bool>false</bool>
+             </property>
+            </widget>
+            <widget class="QLabel" name="labVaildTime">
+             <property name="geometry">
+              <rect>
+               <x>160</x>
+               <y>430</y>
+               <width>221</width>
+               <height>31</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">border-image: url();
+border:0px;
+font: 12pt &quot;文泉驿微米黑&quot;;
+color: rgb(0, 0, 0);
+background-color: rgba(255, 255, 255, 0);</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="wordWrap">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QLabel" name="labType">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">border:0px solid rgb(0, 129, 255);
+border-radius:0px;
+color: rgb(92, 174, 37);
+font: 30pt &quot;Ubuntu&quot;;</string>
+            </property>
+            <property name="text">
+             <string>类型：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="labOilCount">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">border:0px solid rgb(0, 129, 255);
+border-radius:0px;
+color: rgb(92, 174, 37);
+font: 30pt &quot;Ubuntu&quot;;</string>
+            </property>
+            <property name="text">
+             <string>升数：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_5">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="labStatus">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">border:0px solid rgb(0, 129, 255);
+border-radius:0px;
+color: rgb(92, 174, 37);
+font: 30pt &quot;Ubuntu&quot;;</string>
+            </property>
+            <property name="text">
+             <string>状态：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+       </layout>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="btnLedAllRedOn">
-       <property name="text">
-        <string>全红灯亮</string>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
        </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnLedAllOff">
-       <property name="text">
-        <string>全灭</string>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
        </property>
-      </widget>
+      </spacer>
      </item>
     </layout>
+   </item>
+   <item>
+    <spacer name="verticalSpacer_2">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>7</height>
+      </size>
+     </property>
+    </spacer>
    </item>
   </layout>
  </widget>

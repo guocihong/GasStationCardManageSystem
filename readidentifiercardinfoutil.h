@@ -39,7 +39,7 @@ public slots:
     void slotSendCmd();
     void slotReadMsg();
 
-private:
+public:
     QextSerialPort *Serial;
 
     QTimer *SendCmdTimer;

@@ -20,28 +20,28 @@ void LinkOperate::OpenDevice()
     BuzzerFd = open("/dev/s5pv210_buzzer",O_RDWR);
     if(BuzzerFd == -1){
         qDebug() << "/dev/s5pv210_buzzer failed";
+    } else {
+        qDebug() << "/dev/s5pv210_buzzer succeed";
     }
 
     LedFd = open("/dev/s5pv210_led",O_RDWR);
     if(LedFd == -1){
         qDebug() << "/dev/s5pv210_led failed";
+    } else {
+        qDebug() << "/dev/s5pv210_led succeed";
     }
 
     DoorFd = open("/dev/s5pv210_door",O_RDWR);
     if(DoorFd == -1){
         qDebug() << "/dev/s5pv210_door failed";
+    } else {
+        qDebug() << "/dev/s5pv210_door succeed";
     }
 }
 
 void LinkOperate::BuzzerOn()
 {
     ioctl(BuzzerFd,1,3000);
-}
-
-void LinkOperate::slotBuzzerOff()
-{
-    BuzzerTimer->stop();
-    ioctl(BuzzerFd,0);
 }
 
 void LinkOperate::BuzzerOn2Times()
@@ -69,14 +69,14 @@ void LinkOperate::BuzzerOn5Times()
 void LinkOperate::AllowAddOil(int type)
 {
     //ST1亮绿灯
-    ioctl(LedFd,Led2_Green_On);
+    ioctl(LedFd,Led1_Green_On);
 
     //ST2亮绿灯-单位加油,不亮灯-个人加油
     if(type == 1){//个人加油
-        ioctl(LedFd,Led1_Green_Off);
-        ioctl(LedFd,Led1_Red_Off);
+        ioctl(LedFd,Led2_Green_Off);
+        ioctl(LedFd,Led2_Red_Off);
     }else if(type == 2){//单位加油
-        ioctl(LedFd,Led1_Green_On);
+        ioctl(LedFd,Led2_Green_On);
     }
 
     //蜂鸣器2声
@@ -88,10 +88,10 @@ void LinkOperate::AllowAddOil(int type)
 void LinkOperate::RejectAddOil()
 {
     //ST1亮红灯
-    ioctl(LedFd,Led2_Red_On);
+    ioctl(LedFd,Led1_Red_On);
 
     //ST2亮红灯
-    ioctl(LedFd,Led1_Red_On);
+    ioctl(LedFd,Led2_Red_On);
 
     //蜂鸣器5声
     DoorTimer->stop();
@@ -102,11 +102,11 @@ void LinkOperate::RejectAddOil()
 void LinkOperate::InValidUser()
 {
     //ST1亮红灯
-    ioctl(LedFd,Led2_Red_On);
+    ioctl(LedFd,Led1_Red_On);
 
     //ST2不亮灯
-    ioctl(LedFd,Led1_Red_Off);
-    ioctl(LedFd,Led1_Green_Off);
+    ioctl(LedFd,Led2_Red_Off);
+    ioctl(LedFd,Led2_Green_Off);
 
     //蜂鸣器5声
     DoorTimer->stop();
@@ -121,6 +121,22 @@ void LinkOperate::Restore()
 
     ioctl(LedFd,Led1_Red_Off);
     ioctl(LedFd,Led2_Red_Off);
+}
+
+void LinkOperate::ST3_GreenON()
+{
+    ioctl(LedFd,Led3_Green_On);
+}
+
+void LinkOperate::ST3_RedON()
+{
+    ioctl(LedFd,Led3_Red_On);
+}
+
+void LinkOperate::ST3_OFF()
+{
+    ioctl(LedFd,Led3_Green_Off);
+    ioctl(LedFd,Led3_Red_Off);
 }
 
 void LinkOperate::slotReadDoorState()
@@ -140,42 +156,8 @@ void LinkOperate::slotReadDoorState()
     }
 }
 
-void LinkOperate::ST3_GreenON()
+void LinkOperate::slotBuzzerOff()
 {
-    ioctl(LedFd,Led0_Green_On);
-}
-
-void LinkOperate::ST3_GreenOFF()
-{
-    ioctl(LedFd,Led0_Green_Off);
-}
-
-void LinkOperate::ST3_RedON()
-{
-    ioctl(LedFd,Led0_Red_On);
-}
-
-void LinkOperate::LedAllGreenOn()
-{
-    ioctl(LedFd,Led0_Green_On);
-    ioctl(LedFd,Led1_Green_On);
-    ioctl(LedFd,Led2_Green_On);
-}
-
-void LinkOperate::LedAllRedOn()
-{
-    ioctl(LedFd,Led0_Red_On);
-    ioctl(LedFd,Led1_Red_On);
-    ioctl(LedFd,Led2_Red_On);
-}
-
-void LinkOperate::LedAllOff()
-{
-    ioctl(LedFd,Led0_Green_Off);
-    ioctl(LedFd,Led1_Green_Off);
-    ioctl(LedFd,Led2_Green_Off);
-
-    ioctl(LedFd,Led0_Red_Off);
-    ioctl(LedFd,Led1_Red_Off);
-    ioctl(LedFd,Led2_Red_Off);
+    BuzzerTimer->stop();
+    ioctl(BuzzerFd,0);
 }

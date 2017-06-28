@@ -13,23 +13,29 @@ TEMPLATE = app
 SOURCES += main.cpp\
     OperateCamera/operatecamera.cpp \
     LinkOperate/linkoperate.cpp \
-    Qextserialport/listenserial.cpp \
     Qextserialport/qextserialport.cpp \
     Qextserialport/qextserialport_unix.cpp \
-    readidentifiercardinfo.cpp \
     Tcp/tcphelper.cpp \
-    globalconfig.cpp
+    globalconfig.cpp \
+    mainform.cpp \
+    readidentifiercardinfoutil.cpp
 
 HEADERS  += \
     OperateCamera/operatecamera.h \
     LinkOperate/linkoperate.h \
-    Qextserialport/listenserial.h \
     Qextserialport/qextserialport.h \
     Qextserialport/qextserialport_global.h \
     Qextserialport/qextserialport_p.h \
-    readidentifiercardinfo.h \
     Tcp/tcphelper.h \
-    globalconfig.h
+    globalconfig.h \
+    mainform.h \
+    readidentifiercardinfoutil.h
+
+FORMS += \
+    mainform.ui
+
+RESOURCES += \
+    image.qrc
 
 
 DESTDIR=bin
@@ -37,6 +43,3 @@ MOC_DIR=temp/moc
 RCC_DIR=temp/rcc
 UI_DIR=temp/ui
 OBJECTS_DIR=temp/obj
-
-FORMS += \
-    readidentifiercardinfo.ui

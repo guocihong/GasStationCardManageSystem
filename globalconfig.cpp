@@ -1,11 +1,11 @@
 #include "globalconfig.h"
 
-QString GlobalConfig::ServerIP = QString("sgdzpic.3322.org");
-QString GlobalConfig::ServerPort = QString("65001");
+QString GlobalConfig::ServerIP = QString("sgdz.3322.org");
+QString GlobalConfig::ServerPort = QString("65000");
 enum GlobalConfig::ConnectType GlobalConfig::TcpConnectType = GlobalConfig::LongConnection;
 
 quint8  GlobalConfig::SwipCardIntervalTime = 60;
-quint8  GlobalConfig::HeartIntervalTime = 3;
+quint8  GlobalConfig::HeartIntervalTime = 30;
 quint8  GlobalConfig::DeviceHeartIntervalTime = 30;
 QString GlobalConfig::DeviceID = QString("SGT1TEST0001");
 
@@ -13,6 +13,16 @@ QString GlobalConfig::LocalHostIP = CommonSetting::GetLocalHostIP();
 QString GlobalConfig::Mask = CommonSetting::GetMask();
 QString GlobalConfig::Gateway = CommonSetting::GetGateway();
 QString GlobalConfig::MAC = CommonSetting::ReadMacAddress();
+
+QString GlobalConfig::Name = QString("");
+QString GlobalConfig::Sex = QString("");
+QString GlobalConfig::Nation = QString("");
+QString GlobalConfig::Birthday = QString("");
+QString GlobalConfig::Address = QString("");
+QString GlobalConfig::IDCode = QString("");
+QString GlobalConfig::Department = QString("");
+QString GlobalConfig::StartDate = QString("");
+QString GlobalConfig::EndDate = QString("");
 
 QString GlobalConfig::ConfigFileName = "";
 

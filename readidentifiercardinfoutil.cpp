@@ -4,7 +4,7 @@ ReadIdentifierCardInfoUtil::ReadIdentifierCardInfoUtil(QObject *parent) :
     QObject(parent)
 {
     SendCmdTimer = new QTimer (this);
-    SendCmdTimer->setInterval(2000);
+    SendCmdTimer->setInterval(1500);
     connect(SendCmdTimer,SIGNAL(timeout()),this,SLOT(slotSendCmd()));
 
     RecvMsgTimer = new QTimer(this);
@@ -23,14 +23,14 @@ bool ReadIdentifierCardInfoUtil::Open(QString SerialNumber)
         Serial->setFlowControl(FLOW_OFF);
         Serial->setTimeout(10);
 
-        qDebug() << SerialNumber << " Open Succeed";
+        qDebug() << QString("open %1 succeed").arg(SerialNumber);
 
         SendCmdTimer->start();
         RecvMsgTimer->start();
 
         return true;
     } else {
-        qDebug() << SerialNumber << " Open Failed";
+        qDebug() << QString("open %1 failed").arg(SerialNumber);
 
         return false;
     }
@@ -254,7 +254,7 @@ void ReadIdentifierCardInfoUtil::slotReadMsg()
         this->SDT_SelectCard();
         return;
     } else if (HexData == "aaaaaa9669000400008084") {//寻找居民身份证失败
-        qDebug() << "search card failed";
+//        qDebug() << "search card failed";
         return;
     }
 
@@ -264,7 +264,7 @@ void ReadIdentifierCardInfoUtil::slotReadMsg()
         this->SDT_ReadBaseMsg();
         return;
     } else if (HexData == "aaaaaa9669000400008185") {//选取居民身份证失败
-        qDebug() << "select card failed";
+//        qDebug() << "select card failed";
         return;
     }
 
@@ -274,7 +274,7 @@ void ReadIdentifierCardInfoUtil::slotReadMsg()
         this->Parse();
         Buffer.clear();
     } else if (HexData == "aaaaaa9669000400004145") {//读居民身份证操作失败
-        qDebug() << "read card failed";
+//        qDebug() << "read card failed";
         Buffer.clear();
     } else if (Buffer.size() > 1295) {
         Buffer.clear();

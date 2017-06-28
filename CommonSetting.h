@@ -272,6 +272,11 @@ public:
                 continue;
             dirNames << dirName;
         }
+
+        if (dirNames.size() > 5) {
+            dirNames.mid(0,5);
+        }
+
         return dirNames;
     }
 

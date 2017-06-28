@@ -27,6 +27,16 @@ public:
 
     static QString ConfigFileName;
 
+    static QString Name;
+    static QString Sex;
+    static QString Nation;
+    static QString Birthday;
+    static QString Address;
+    static QString IDCode;
+    static QString Department;
+    static QString StartDate;
+    static QString EndDate;
+
     static void init();
 };
 

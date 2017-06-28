@@ -64,26 +64,31 @@ TcpHelper::TcpHelper(QObject *parent) :
 void TcpHelper::SendDoorStatusInfo(QString DoorStatus)
 {
     SendMsgTypeFlag = TcpHelper::DoorStatusInfo;
-    SendDataPackage("",DoorStatus,"");
+    SendDataPackage("",DoorStatus,"","");
 }
 
 void TcpHelper::slotSendHeart()
 {
+    //1：插入网线，并且与服务器联通
+    //2：插了网线，但是与服务器不通
+    //3：没有插网线
+
     SendMsgTypeFlag = TcpHelper::Heart;
-    SendDataPackage("","","");
+    SendDataPackage("","","","");
 
     if(isNetWorkNormal){//网络正常
-        emit signalUpdateNetWorkStatusInfo(2);
+        emit signalUpdateNetWorkStatusInfo(1);
         LossPacketCount = 0;
     }else{//网络异常
         if(isInsertCable){//插了网线,表明网络是正常的,但是与服务器不联通,可能是配置问题或者服务器的问题
             LossPacketCount++;
-            if(LossPacketCount == 5){
-                emit signalUpdateNetWorkStatusInfo(1);
+            if(LossPacketCount == 3){
+                emit signalUpdateNetWorkStatusInfo(2);
                 LossPacketCount = 0;
             }
         }else{//没有插网线
-            emit signalUpdateNetWorkStatusInfo(0);
+            emit signalUpdateNetWorkStatusInfo(3);
+            LossPacketCount = 0;
         }
     }
 
@@ -93,15 +98,24 @@ void TcpHelper::slotSendHeart()
 void TcpHelper::slotSendDeviceHeart()
 {
     SendMsgTypeFlag = TcpHelper::DeviceHeart;
-    SendDataPackage("","","");
+    SendDataPackage("","","","");
 }
 
 void TcpHelper::slotGetIDList()
 {
+    static char count = 0;
+
     if(!isGetCardIDList){
         SendMsgTypeFlag = TcpHelper::DeviceHeart;
-        SendDataPackage("","","");
+        SendDataPackage("","","","");
         qDebug() << "isGetCardIDList";
+
+        count++;
+        if(count == 3){
+            count = 0;
+            GetCardIDListTimer->stop();
+            qDebug() << "stop GetCardIDListTimer";
+        }
     }else{
         GetCardIDListTimer->stop();
         qDebug() << "stop GetCardIDListTimer";
@@ -109,7 +123,7 @@ void TcpHelper::slotGetIDList()
 }
 
 void TcpHelper::slotCheckNetWorkState()
-{
+{    
     system("ifconfig eth0 > /bin/network_info.txt");
     QString network_info = CommonSetting::ReadFile("/bin/network_info.txt");
     if(network_info.contains("RUNNING")){
@@ -119,6 +133,7 @@ void TcpHelper::slotCheckNetWorkState()
         ConnectStateFlag = TcpHelper::DisConnectedState;
         tcpSocket->disconnectFromHost();
         tcpSocket->abort();
+        emit signalUpdateNetWorkStatusInfo(1);
     }
 }
 
@@ -177,10 +192,10 @@ void TcpHelper::slotProcessMsg()
         if(RootElement.hasAttribute("NowTime")){
             //获得这个属性对应的值
             NowTime = RootElement.attributeNode("NowTime").value();
+            CommonSetting::SettingSystemDateTime(NowTime);
         }
 
-        QDomNode firstChildNode =
-                RootElement.firstChild();//第一个子节点
+        QDomNode firstChildNode = RootElement.firstChild();//第一个子节点
         while(!firstChildNode.isNull()){
             if(firstChildNode.nodeName() == "Caption"){
                 qDebug() << "Caption";
@@ -288,7 +303,7 @@ void TcpHelper::slotDisplayError(QAbstractSocket::SocketError socketError)
     tcpSocket->abort();
 }
 
-void TcpHelper::SendDataPackage(QString PathPrefix, QString CardID, QString TriggerTime)
+void TcpHelper::SendDataPackage(QString PathPrefix, QString CardID, QString TriggerTime, QString CardType)
 {
     QString MessageMerge;
     QDomDocument dom;
@@ -328,11 +343,11 @@ void TcpHelper::SendDataPackage(QString PathPrefix, QString CardID, QString Trig
         RootElement.appendChild(firstChildElement);
     }else if(SendMsgTypeFlag == TcpHelper::OperationCmd){
         QDomElement firstChildElement = dom.createElement("OperationCmd");
-        firstChildElement.setAttribute("Type","1");
+        firstChildElement.setAttribute("Type",CardType);
         firstChildElement.setAttribute("CardID",CardID);
         firstChildElement.setAttribute("TriggerTime",TriggerTime);//2016-02-19 15:07:36
-        //Base64_432503199006177691_2016-02-19_14-34-05.txt
-        QString fileName = PathPrefix + "Base64_" + CardID + "_" + TriggerTime.replace(" ","_").replace(":","-") + ".txt";
+        //Base64_432503199006177691_2016-02-19_14-34-05_1.txt
+        QString fileName = PathPrefix + "Base64_" + CardID + "_" + TriggerTime.replace(" ","_").replace(":","-") + "_" + CardType+ ".txt";
         QString imgBase64 = CommonSetting::ReadFile(fileName);
         QDomText firstChildElementText = dom.createTextNode(imgBase64);//base64图片数据
         firstChildElement.appendChild(firstChildElementText);
@@ -356,7 +371,7 @@ void TcpHelper::SendCommonCode(QString MessageMerge)
 {
     if(GlobalConfig::TcpConnectType == GlobalConfig::ShortConnection){//短连接
         //建立连接
-        tcpSocket->connectToHost(GlobalConfig::ServerIP,                               GlobalConfig::ServerPort.toUInt());
+        tcpSocket->connectToHost(GlobalConfig::ServerIP, GlobalConfig::ServerPort.toUInt());
         CommonSetting::Sleep(300);
         if(ConnectStateFlag == TcpHelper::ConnectedState){
             tcpSocket->write(MessageMerge.toAscii());
@@ -392,7 +407,7 @@ void TcpHelper::SendCommonCode(QString MessageMerge)
             tcpSocket->disconnectFromHost();
             tcpSocket->abort();
 
-            tcpSocket->connectToHost(GlobalConfig::ServerIP,                               GlobalConfig::ServerPort.toUInt());
+            tcpSocket->connectToHost(GlobalConfig::ServerIP, GlobalConfig::ServerPort.toUInt());
             CommonSetting::Sleep(300);
             if(ConnectStateFlag == TcpHelper::ConnectedState){
                 tcpSocket->write(MessageMerge.toAscii());
@@ -415,9 +430,9 @@ void TcpHelper::PareseSendMsgType()
 {
     if(SendMsgTypeFlag == TcpHelper::Heart){
         if(DataSendStateFlag == TcpHelper::SendSucceed){
-//            qDebug() << "Tcp:Send Heart Succeed";
+            qDebug() << "Tcp:Send Heart Succeed";
         }else if(DataSendStateFlag == TcpHelper::SendFailed){
-//            qDebug() << "Tcp:Send Heart Failed";
+            qDebug() << "Tcp:Send Heart Failed";
         }
     }else if(SendMsgTypeFlag == TcpHelper::DeviceHeart){
         if(DataSendStateFlag == TcpHelper::SendSucceed){
@@ -447,8 +462,11 @@ void TcpHelper::slotSendLogInfo(QString info)
 
     QStringList tempCardIDList;
     QStringList tempTriggerTimeList;
-    char txFailedCount = 0;//用来统计发送失败次数
-    char txSucceedCount = 0;//用来统计发送成功的次数
+    QStringList tempCardTypeList;
+
+    quint8 txFailedCount = 0;//用来统计发送失败次数
+    quint8 txSucceedCount = 0;//用来统计发送成功的次数
+    quint8 VersionType = 0;//新版本1，老版本0
 
     QStringList dirlist = CommonSetting::GetDirNames("/sdcard");
     if(!dirlist.isEmpty()){
@@ -457,34 +475,52 @@ void TcpHelper::slotSendLogInfo(QString info)
                     CommonSetting::GetFileNames("/sdcard/" + dirName,"*.txt");
             if(!filelist.isEmpty()){
                 foreach(const QString &fileName,filelist){
-                    //Base64_432503199006177691_2016-02-19_14-34-05.txt
-                    tempCardIDList << fileName.split("_").at(1);
-                    QString Date = fileName.split("_").at(2);
-                    QString Time = fileName.split("_").at(3).split(".").at(0);
-                    Time = Time.replace(QRegExp("-"),QString(":"));
-                    tempTriggerTimeList << Date + " " + Time;
-                }
-                SendMsgTypeFlag = TcpHelper::OperationCmd;
-                SendDataPackage(QString("/sdcard/") + dirName + QString("/"),tempCardIDList.join(","),tempTriggerTimeList.join(","));
+                    //检测文件是否符合命名规则
+                    //新版本：Base64_432503199006177691_2016-02-19_14-34-05_人员类型.txt
+                    //老版本：Base64_432503199006177691_2016-02-19_14-34-05.txt
 
-                CommonSetting::Sleep(500);
-                //日志信息发送成功:删除本地记录
-                if(DataSendStateFlag == TcpHelper::SendSucceed){
-                    system(tr("rm -rf /sdcard/%1").arg(dirName).toAscii().data());
-                    txSucceedCount++;
-                    if(txSucceedCount == 5){
-                        break;
-                    }
-                }else{
-                    txFailedCount++;
-                    if(txFailedCount == 5){
-                        qDebug() << "连续发送五次都没有成功，表示网络离线\n";
-                        break;
+                    quint8 size = fileName.split("_").size();
+                    if(size == 4){//老版本
+                        VersionType = 0;
+                    }else if(size == 5){//新版本
+                        VersionType = 1;
+
+                        tempCardIDList << fileName.split("_").at(1);
+                        QString Date = fileName.split("_").at(2);
+                        QString Time = fileName.split("_").at(3);
+
+                        Time = Time.replace(QRegExp("-"),QString(":"));
+                        tempTriggerTimeList << Date + " " + Time;
+
+                        tempCardTypeList << fileName.split("_").at(4).mid(0,1);
                     }
                 }
-                tempCardIDList.clear();
-                tempTriggerTimeList.clear();
-                CommonSetting::Sleep(1000);
+
+                if(VersionType){//新版本
+                    SendMsgTypeFlag = TcpHelper::OperationCmd;
+                    SendDataPackage(QString("/sdcard/") + dirName + QString("/"),tempCardIDList.join(","),tempTriggerTimeList.join(","),tempCardTypeList.join(","));
+
+                    CommonSetting::Sleep(1000);
+                    //日志信息发送成功:删除本地记录
+                    if(DataSendStateFlag == TcpHelper::SendSucceed){
+                        system(tr("rm -rf /sdcard/%1").arg(dirName).toAscii().data());
+                        txSucceedCount++;
+                        if(txSucceedCount == 5){
+                            break;
+                        }
+                    }else{
+                        txFailedCount++;
+                        if(txFailedCount == 5){
+                            qDebug() << "连续发送五次都没有成功，表示网络离线\n";
+                            break;
+                        }
+                    }
+                    tempCardIDList.clear();
+                    tempTriggerTimeList.clear();
+                    tempCardTypeList.clear();
+                }else{//老版本
+                    system(tr("rm -rf /sdcard/%1").arg(dirName).toAscii().data());
+                }
             }
         }
     }
