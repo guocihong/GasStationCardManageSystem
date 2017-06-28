@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/template.jpg</file>
+        <file>images/39.jpeg</file>
+        <file>images/novideo.png</file>
+        <file>images/nopic.png</file>
+    </qresource>
+</RCC>
